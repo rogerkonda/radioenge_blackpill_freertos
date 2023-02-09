@@ -1,6 +1,7 @@
 #include "cmsis_os.h"
 #include "radioenge_modem.h"
 #include "uart_at.h"
+#include "main.h"
 #include <string.h>
 
 volatile JOINED_STATE gJoinedFSM = JOINED_TX;
@@ -10,6 +11,8 @@ extern osThreadId_t ModemMngrTaskHandle;
 extern osSemaphoreId_t RadioStateSemaphoreHandle;
 extern osMessageQueueId_t ModemSendQueueHandle;
 extern osSemaphoreId_t LoRaTXSemaphoreHandle;
+extern osEventFlagsId_t ModemStatusFlagsHandle;
+extern osTimerId_t ModemLedTimerHandle;
 
 #define NUMBER_OF_STRINGS (7)
 #define STRING_LENGTH (255)
@@ -54,15 +57,65 @@ void SetRadioState(RADIO_STATE state)
     osSemaphoreRelease(RadioStateSemaphoreHandle);
 }
 
+void ModemLedCallback (void *argument) 
+{
+    switch(gRadioState)
+    {
+    case RADIO_RESET:
+    {
+        HAL_GPIO_TogglePin(LED1_RED_GPIO_Port, LED1_RED_Pin);
+        HAL_GPIO_WritePin(LED2_YELLOW_GPIO_Port, LED2_YELLOW_Pin, 0);
+        HAL_GPIO_WritePin(LED3_GREEN_GPIO_Port, LED3_GREEN_Pin, 0);
+        HAL_GPIO_WritePin(LED4_WHITE_GPIO_Port, LED4_WHITE_Pin, 0);        
+    }
+    case RADIO_CONFIGURING:
+    {
+        HAL_GPIO_WritePin(LED1_RED_GPIO_Port, LED1_RED_Pin,1);
+        HAL_GPIO_TogglePin(LED2_YELLOW_GPIO_Port, LED2_YELLOW_Pin);
+        HAL_GPIO_WritePin(LED3_GREEN_GPIO_Port, LED3_GREEN_Pin,0);
+        HAL_GPIO_WritePin(LED4_WHITE_GPIO_Port, LED4_WHITE_Pin, 0);        
+    }
+    case RADIO_JOINING:
+    {
+        HAL_GPIO_WritePin(LED1_RED_GPIO_Port, LED1_RED_Pin,1);
+        HAL_GPIO_WritePin(LED2_YELLOW_GPIO_Port, LED2_YELLOW_Pin,1);
+        HAL_GPIO_TogglePin(LED3_GREEN_GPIO_Port, LED3_GREEN_Pin);
+        HAL_GPIO_WritePin(LED4_WHITE_GPIO_Port, LED4_WHITE_Pin, 0);        
+    }
+    case RADIO_JOINED:
+    {
+        HAL_GPIO_WritePin(LED1_RED_GPIO_Port, LED1_RED_Pin,1);
+        HAL_GPIO_WritePin(LED2_YELLOW_GPIO_Port, LED2_YELLOW_Pin,1);
+        HAL_GPIO_WritePin(LED3_GREEN_GPIO_Port, LED3_GREEN_Pin,1);
+        HAL_GPIO_WritePin(LED4_WHITE_GPIO_Port, LED4_WHITE_Pin, 0);        
+    }
+    default:
+    {
+        HAL_GPIO_WritePin(LED1_RED_GPIO_Port, LED1_RED_Pin,0);
+        HAL_GPIO_WritePin(LED2_YELLOW_GPIO_Port, LED2_YELLOW_Pin,0);
+        HAL_GPIO_WritePin(LED3_GREEN_GPIO_Port, LED3_GREEN_Pin,0);
+        HAL_GPIO_WritePin(LED4_WHITE_GPIO_Port, LED4_WHITE_Pin, 0);        
+    }    
+    }
+}
+
+
+
+
 void ModemManagerTaskCode(void *argument)
 {
     /* USER CODE BEGIN 5 */
     /* Infinite loop */    
     uint32_t ConfigCmdIndex = 0;
     uint32_t flags;
+    uint32_t modemflags;
+    osTimerStart(ModemLedTimerHandle, 100U);
+    osThreadFlagsSet(ModemMngrTaskHandle, 0x01);
+    
     while (1)
     {
         flags = osThreadFlagsWait (0x01, osFlagsWaitAny,osWaitForever);
+        osEventFlagsClear(ModemStatusFlagsHandle, RADIO_STATE_ALL);        
         switch (gRadioState)
         {
         case RADIO_RESET:
@@ -101,9 +154,8 @@ void ModemManagerTaskCode(void *argument)
             // now the send thread can work
             break;
         }
-            /* USER CODE END StartCmdProcessing */
-            /* USER CODE END 5 */
         }
+        modemflags = osEventFlagsSet(ModemStatusFlagsHandle, gRadioState);
     }
 }
 
@@ -112,10 +164,10 @@ uint8_t gEncodedString[OUT_BUFFER_SIZE];
 uint8_t gSendBuffer[OUT_BUFFER_SIZE+16]; 
 
 
-void LoRaSend(uint32_t LoraWANPort,uint8_t* msg)
+osStatus_t LoRaSend(uint32_t LoraWANPort,uint8_t* msg)
 {    
     osSemaphoreAcquire(LoRaTXSemaphoreHandle,osWaitForever);
-    LoRaSendNow(LoraWANPort,msg);    
+    return LoRaSendNow(LoraWANPort,msg);    
 }
 
 size_t bin_encode(void* in, size_t in_size, uint8_t* out, size_t max_out_size)
@@ -142,10 +194,10 @@ size_t bin_encode(void* in, size_t in_size, uint8_t* out, size_t max_out_size)
     return offset; //returns the size of the AT buffer
 }
 
-void LoRaSendB(uint32_t LoraWANPort, uint8_t* msg, size_t size)
+osStatus_t LoRaSendB(uint32_t LoraWANPort, uint8_t* msg, size_t size)
 {
     osSemaphoreAcquire(LoRaTXSemaphoreHandle,osWaitForever);
-    LoRaSendBNow(LoraWANPort,msg,size);    
+    return LoRaSendBNow(LoraWANPort,msg,size);    
 }
 
 
@@ -156,31 +208,41 @@ void LoRaWaitDutyCycle()
     osSemaphoreAcquire(LoRaTXSemaphoreHandle,osWaitForever);
 }
 
-void LoRaSendNow(uint32_t LoraWANPort, uint8_t* msg)
+osStatus_t LoRaSendNow(uint32_t LoraWANPort, uint8_t* msg)
 {
-    snprintf(gSendBuffer, OUT_BUFFER_SIZE+16, "AT+SEND=%d:%s\r\n", LoraWANPort, msg);
-    if(sendRAWAT(gSendBuffer)!=AT_OK)
+    if (gRadioState == RADIO_JOINED)
     {
-        osThreadFlagsSet(ModemMngrTaskHandle, 0x01);            
+        snprintf(gSendBuffer, OUT_BUFFER_SIZE + 16, "AT+SEND=%d:%s\r\n", LoraWANPort, msg);
+        if (sendRAWAT(gSendBuffer) != AT_OK)
+        {
+            osThreadFlagsSet(ModemMngrTaskHandle, 0x01);
+            return osOK;
+        }
+        else
+        {
+            osSemaphoreRelease(LoRaTXSemaphoreHandle);
+        }
     }
-    else
-    {
-        osSemaphoreRelease(LoRaTXSemaphoreHandle);
-    }
+    return osError;
 }
 
-void LoRaSendBNow(uint32_t LoraWANPort, uint8_t* msg, size_t size)
+osStatus_t LoRaSendBNow(uint32_t LoraWANPort, uint8_t* msg, size_t size)
 {
-    size_t encoded_size = bin_encode((void *)(msg), size, gEncodedString, OUT_BUFFER_SIZE);
-    snprintf(gSendBuffer, OUT_BUFFER_SIZE+16, "AT+SENDB=%d:%s\r\n", LoraWANPort, gEncodedString);
-    if(sendRAWAT(gSendBuffer)!=AT_OK)
+    if (gRadioState == RADIO_JOINED)
     {
-        osThreadFlagsSet(ModemMngrTaskHandle, 0x01);            
+        size_t encoded_size = bin_encode((void *)(msg), size, gEncodedString, OUT_BUFFER_SIZE);
+        snprintf(gSendBuffer, OUT_BUFFER_SIZE + 16, "AT+SENDB=%d:%s\r\n", LoraWANPort, gEncodedString);
+        if (sendRAWAT(gSendBuffer) != AT_OK)
+        {
+            osThreadFlagsSet(ModemMngrTaskHandle, 0x01);
+            return osOK;
+        }
+        else
+        {
+            osSemaphoreRelease(LoRaTXSemaphoreHandle);
+        }
     }
-    else
-    {
-        osSemaphoreRelease(LoRaTXSemaphoreHandle);
-    }
+    return osError;
 }
 
 
@@ -188,6 +250,7 @@ void ModemSendTaskCode(void const *argument)
 {
     uint32_t DutyCycle_ms = *(uint32_t*)argument;
     uint32_t flags;    
+    osSemaphoreAcquire(LoRaTXSemaphoreHandle,osWaitForever);
     while (1)
     {
         flags = osThreadFlagsWait (0x01, osFlagsWaitAny,osWaitForever);        

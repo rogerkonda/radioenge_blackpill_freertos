@@ -31,6 +31,7 @@ typedef StaticTask_t osStaticThreadDef_t;
 typedef StaticQueue_t osStaticMessageQDef_t;
 typedef StaticTimer_t osStaticTimerDef_t;
 typedef StaticSemaphore_t osStaticSemaphoreDef_t;
+typedef StaticEventGroup_t osStaticEventGroupDef_t;
 /* USER CODE BEGIN PTD */
 
 /* USER CODE END PTD */
@@ -61,7 +62,7 @@ const osThreadAttr_t defaultTask_attributes = {
   .cb_size = sizeof(defaultTaskControlBlock),
   .stack_mem = &defaultTaskBuffer[0],
   .stack_size = sizeof(defaultTaskBuffer),
-  .priority = (osPriority_t) osPriorityNormal,
+  .priority = (osPriority_t) osPriorityLow1,
 };
 /* Definitions for ATParsingTask */
 osThreadId_t ATParsingTaskHandle;
@@ -73,7 +74,7 @@ const osThreadAttr_t ATParsingTask_attributes = {
   .cb_size = sizeof(ATParsingTaskControlBlock),
   .stack_mem = &ATParsingTaskBuffer[0],
   .stack_size = sizeof(ATParsingTaskBuffer),
-  .priority = (osPriority_t) osPriorityAboveNormal,
+  .priority = (osPriority_t) osPriorityAboveNormal7,
 };
 /* Definitions for ATHandlingTask */
 osThreadId_t ATHandlingTaskHandle;
@@ -85,7 +86,7 @@ const osThreadAttr_t ATHandlingTask_attributes = {
   .cb_size = sizeof(ATHandlingTaskControlBlock),
   .stack_mem = &ATHandlingTaskBuffer[0],
   .stack_size = sizeof(ATHandlingTaskBuffer),
-  .priority = (osPriority_t) osPriorityAboveNormal1,
+  .priority = (osPriority_t) osPriorityAboveNormal6,
 };
 /* Definitions for UARTProcTask */
 osThreadId_t UARTProcTaskHandle;
@@ -97,7 +98,7 @@ const osThreadAttr_t UARTProcTask_attributes = {
   .cb_size = sizeof(UARTProcTaskControlBlock),
   .stack_mem = &UARTProcTaskBuffer[0],
   .stack_size = sizeof(UARTProcTaskBuffer),
-  .priority = (osPriority_t) osPriorityAboveNormal2,
+  .priority = (osPriority_t) osPriorityHigh7,
 };
 /* Definitions for ModemMngrTask */
 osThreadId_t ModemMngrTaskHandle;
@@ -109,7 +110,7 @@ const osThreadAttr_t ModemMngrTask_attributes = {
   .cb_size = sizeof(ModemMngrTaskControlBlock),
   .stack_mem = &ModemMngrTaskBuffer[0],
   .stack_size = sizeof(ModemMngrTaskBuffer),
-  .priority = (osPriority_t) osPriorityNormal,
+  .priority = (osPriority_t) osPriorityNormal7,
 };
 /* Definitions for ModemSendTask */
 osThreadId_t ModemSendTaskHandle;
@@ -121,7 +122,7 @@ const osThreadAttr_t ModemSendTask_attributes = {
   .cb_size = sizeof(ModemSendTaskControlBlock),
   .stack_mem = &ModemSendTaskBuffer[0],
   .stack_size = sizeof(ModemSendTaskBuffer),
-  .priority = (osPriority_t) osPriorityNormal,
+  .priority = (osPriority_t) osPriorityNormal6,
 };
 /* Definitions for AppSendTask */
 osThreadId_t AppSendTaskHandle;
@@ -133,7 +134,7 @@ const osThreadAttr_t AppSendTask_attributes = {
   .cb_size = sizeof(SendTemperatureControlBlock),
   .stack_mem = &SendTemperatureBuffer[0],
   .stack_size = sizeof(SendTemperatureBuffer),
-  .priority = (osPriority_t) osPriorityLow,
+  .priority = (osPriority_t) osPriorityLow7,
 };
 /* Definitions for uartQueue */
 osMessageQueueId_t uartQueueHandle;
@@ -176,6 +177,14 @@ const osTimerAttr_t PeriodicSendTimer_attributes = {
   .cb_mem = &PeriodicSendTimerControlBlock,
   .cb_size = sizeof(PeriodicSendTimerControlBlock),
 };
+/* Definitions for ModemLedTimer */
+osTimerId_t ModemLedTimerHandle;
+osStaticTimerDef_t ModemLedTimerControlBlock;
+const osTimerAttr_t ModemLedTimer_attributes = {
+  .name = "ModemLedTimer",
+  .cb_mem = &ModemLedTimerControlBlock,
+  .cb_size = sizeof(ModemLedTimerControlBlock),
+};
 /* Definitions for ATCommandSemaphore */
 osSemaphoreId_t ATCommandSemaphoreHandle;
 osStaticSemaphoreDef_t ATCommandSemaphoreControlBlock;
@@ -216,6 +225,14 @@ const osSemaphoreAttr_t LoRaTXSemaphore_attributes = {
   .cb_mem = &LoRaTXSemaphoreControlBlock,
   .cb_size = sizeof(LoRaTXSemaphoreControlBlock),
 };
+/* Definitions for ModemStatusFlags */
+osEventFlagsId_t ModemStatusFlagsHandle;
+osStaticEventGroupDef_t ModemStatusFlagsControlBlock;
+const osEventFlagsAttr_t ModemStatusFlags_attributes = {
+  .name = "ModemStatusFlags",
+  .cb_mem = &ModemStatusFlagsControlBlock,
+  .cb_size = sizeof(ModemStatusFlagsControlBlock),
+};
 /* USER CODE BEGIN PV */
 volatile float vector[255];
 extern UART_HandleTypeDef huart1;
@@ -237,6 +254,7 @@ extern void ModemManagerTaskCode(void *argument);
 extern void ModemSendTaskCode(void *argument);
 extern void AppSendTaskCode(void *argument);
 extern void PeriodicSendTimerCallback(void *argument);
+extern void ModemLedCallback(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -316,6 +334,9 @@ int main(void)
   /* creation of PeriodicSendTimer */
   PeriodicSendTimerHandle = osTimerNew(PeriodicSendTimerCallback, osTimerPeriodic, NULL, &PeriodicSendTimer_attributes);
 
+  /* creation of ModemLedTimer */
+  ModemLedTimerHandle = osTimerNew(ModemLedCallback, osTimerPeriodic, NULL, &ModemLedTimer_attributes);
+
   /* USER CODE BEGIN RTOS_TIMERS */
   /* start timers, add new ones, ... */
   /* USER CODE END RTOS_TIMERS */
@@ -359,6 +380,10 @@ int main(void)
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
+
+  /* Create the event(s) */
+  /* creation of ModemStatusFlags */
+  ModemStatusFlagsHandle = osEventFlagsNew(&ModemStatusFlags_attributes);
 
   /* USER CODE BEGIN RTOS_EVENTS */
   /* add events, ... */
@@ -552,14 +577,14 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LED_PIN_GPIO_Port, LED_PIN_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, LED3_GREEN_Pin|LED1_RED_Pin|LED4_WHITE_Pin|LED2_YELLOW_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : LED_PIN_Pin */
-  GPIO_InitStruct.Pin = LED_PIN_Pin;
+  /*Configure GPIO pins : LED3_GREEN_Pin LED1_RED_Pin LED4_WHITE_Pin LED2_YELLOW_Pin */
+  GPIO_InitStruct.Pin = LED3_GREEN_Pin|LED1_RED_Pin|LED4_WHITE_Pin|LED2_YELLOW_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LED_PIN_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 }
 
