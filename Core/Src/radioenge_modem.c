@@ -13,6 +13,7 @@ extern osMessageQueueId_t ModemSendQueueHandle;
 extern osSemaphoreId_t LoRaTXSemaphoreHandle;
 extern osEventFlagsId_t ModemStatusFlagsHandle;
 extern osTimerId_t ModemLedTimerHandle;
+extern osMessageQueueId_t uartQueueHandle;
 
 #define NUMBER_OF_STRINGS (7)
 #define STRING_LENGTH (255)
@@ -25,17 +26,25 @@ char gConfigCmds[NUMBER_OF_STRINGS][STRING_LENGTH + 1] = {
     "AT+NJM=1\r\n",
     "AT+JOIN\r\n"};
 
+
+uint32_t gConsecutiveJoinErrors = 0;
+
 void LoRaWAN_JoinCallback(ATResponse response)
 {
     if (gRadioState == RADIO_JOINING)
     {
         if (response == AT_JOINED)
         {
+            gConsecutiveJoinErrors = 0;
             SetRadioState(RADIO_JOINED);
         }
         else
         {
-            SetRadioState(RADIO_RESET);
+            gConsecutiveJoinErrors++;
+            if(gConsecutiveJoinErrors==9) //radioenge modem stops after 9 join errors
+            {
+                SetRadioState(RADIO_RESET);
+            }
         }
         osThreadFlagsSet(ModemMngrTaskHandle, 0x01);
     }
@@ -57,7 +66,7 @@ void SetRadioState(RADIO_STATE state)
     osSemaphoreRelease(RadioStateSemaphoreHandle);
 }
 
-void ModemLedCallback (void *argument) 
+void ModemLedCallback(void *argument) 
 {
     switch(gRadioState)
     {
@@ -66,35 +75,40 @@ void ModemLedCallback (void *argument)
         HAL_GPIO_TogglePin(LED1_RED_GPIO_Port, LED1_RED_Pin);
         HAL_GPIO_WritePin(LED2_YELLOW_GPIO_Port, LED2_YELLOW_Pin, 0);
         HAL_GPIO_WritePin(LED3_GREEN_GPIO_Port, LED3_GREEN_Pin, 0);
-        HAL_GPIO_WritePin(LED4_WHITE_GPIO_Port, LED4_WHITE_Pin, 0);        
+        HAL_GPIO_WritePin(LED4_WHITE_GPIO_Port, LED4_WHITE_Pin, 0); 
+        break;       
     }
     case RADIO_CONFIGURING:
     {
-        HAL_GPIO_WritePin(LED1_RED_GPIO_Port, LED1_RED_Pin,1);
+        HAL_GPIO_WritePin(LED1_RED_GPIO_Port, LED1_RED_Pin,0);
         HAL_GPIO_TogglePin(LED2_YELLOW_GPIO_Port, LED2_YELLOW_Pin);
         HAL_GPIO_WritePin(LED3_GREEN_GPIO_Port, LED3_GREEN_Pin,0);
         HAL_GPIO_WritePin(LED4_WHITE_GPIO_Port, LED4_WHITE_Pin, 0);        
+        break;       
     }
     case RADIO_JOINING:
     {
-        HAL_GPIO_WritePin(LED1_RED_GPIO_Port, LED1_RED_Pin,1);
-        HAL_GPIO_WritePin(LED2_YELLOW_GPIO_Port, LED2_YELLOW_Pin,1);
+        HAL_GPIO_WritePin(LED1_RED_GPIO_Port, LED1_RED_Pin,0);
+        HAL_GPIO_WritePin(LED2_YELLOW_GPIO_Port, LED2_YELLOW_Pin,0);
         HAL_GPIO_TogglePin(LED3_GREEN_GPIO_Port, LED3_GREEN_Pin);
         HAL_GPIO_WritePin(LED4_WHITE_GPIO_Port, LED4_WHITE_Pin, 0);        
+        break;       
     }
     case RADIO_JOINED:
     {
-        HAL_GPIO_WritePin(LED1_RED_GPIO_Port, LED1_RED_Pin,1);
-        HAL_GPIO_WritePin(LED2_YELLOW_GPIO_Port, LED2_YELLOW_Pin,1);
+        HAL_GPIO_WritePin(LED1_RED_GPIO_Port, LED1_RED_Pin,0);
+        HAL_GPIO_WritePin(LED2_YELLOW_GPIO_Port, LED2_YELLOW_Pin,0);
         HAL_GPIO_WritePin(LED3_GREEN_GPIO_Port, LED3_GREEN_Pin,1);
         HAL_GPIO_WritePin(LED4_WHITE_GPIO_Port, LED4_WHITE_Pin, 0);        
+        break;       
     }
     default:
     {
-        HAL_GPIO_WritePin(LED1_RED_GPIO_Port, LED1_RED_Pin,0);
-        HAL_GPIO_WritePin(LED2_YELLOW_GPIO_Port, LED2_YELLOW_Pin,0);
-        HAL_GPIO_WritePin(LED3_GREEN_GPIO_Port, LED3_GREEN_Pin,0);
-        HAL_GPIO_WritePin(LED4_WHITE_GPIO_Port, LED4_WHITE_Pin, 0);        
+        HAL_GPIO_TogglePin(LED1_RED_GPIO_Port, LED1_RED_Pin);
+        HAL_GPIO_TogglePin(LED2_YELLOW_GPIO_Port, LED2_YELLOW_Pin);
+        HAL_GPIO_TogglePin(LED3_GREEN_GPIO_Port, LED3_GREEN_Pin);
+        HAL_GPIO_TogglePin(LED4_WHITE_GPIO_Port, LED4_WHITE_Pin);        
+        break;       
     }    
     }
 }
@@ -109,7 +123,7 @@ void ModemManagerTaskCode(void *argument)
     uint32_t ConfigCmdIndex = 0;
     uint32_t flags;
     uint32_t modemflags;
-    osTimerStart(ModemLedTimerHandle, 100U);
+    osTimerStart(ModemLedTimerHandle, 50U);
     osThreadFlagsSet(ModemMngrTaskHandle, 0x01);
     
     while (1)
@@ -125,17 +139,19 @@ void ModemManagerTaskCode(void *argument)
             ConfigCmdIndex = 0;
             SetRadioState(RADIO_CONFIGURING);
             osThreadFlagsSet(ModemMngrTaskHandle, 0x01);
+            osDelay(1000);
             break;
         }
         case RADIO_CONFIGURING:
         {
             if (sendRAWAT(gConfigCmds[ConfigCmdIndex]) == AT_OK)
-            {
+            {                
                 ConfigCmdIndex++;
                 if (ConfigCmdIndex == NUMBER_OF_STRINGS)
                 {
                     SetRadioState(RADIO_JOINING);
                 }
+                osDelay(100);
             }
             else
             {

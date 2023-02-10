@@ -8,6 +8,7 @@ uint8_t cmd_len = 0;
 uint8_t byte = 0;
 osMemoryPoolId_t mpid_ATCMD_MemPool; // memory pool id
 osMemoryPoolId_t mpid_LoRaPayload_MemPool; // memory pool id
+extern osMessageQueueId_t uartQueueHandle;
 
 ATResponse ParseAT(char *buffer);
 ATResponse ParseResponse(char *buffer);
@@ -48,6 +49,8 @@ UART_MEM_BLOCK_t gATPayload;
 ATResponse sendRAWAT(uint8_t *cmd)
 {    
     CMD_t* pATCommand;
+    osStatus_t ret;
+    uint32_t retries = 0;
     osSemaphoreAcquire(ATCommandSemaphoreHandle, osWaitForever);
     pATCommand = (CMD_t *)osMemoryPoolAlloc(mpid_ATCMD_MemPool, 0U); // get Mem Block
     if(pATCommand != NULL)
@@ -56,11 +59,22 @@ ATResponse sendRAWAT(uint8_t *cmd)
         pATCommand->response = AT_RESPONSE_UNDEFINED;
         if(pATCommand->command != AT_COMMAND_UNDEFINED )
         {
-            memcpy(cmd,gATPayload.Buf,strlen(cmd));
+            memcpy(gATPayload.Buf,cmd,strlen(cmd)+1);
             pATCommand->tx_payload = &gATPayload;
             gPendingResponse = AT_RESPONSE_UNDEFINED;
-            osMessageQueuePut(ATQueueHandle, &pATCommand, 0U, 0U);        
+            do
+            {
+                ret = osMessageQueuePut(ATQueueHandle, &pATCommand, 0U, 250U);
+                if (ret != osOK)
+                {
+                    if(retries++>4)
+                    {
+                        return AT_ERROR;                
+                    }
+                }
+            }while(ret != osOK);
             osSemaphoreAcquire(ATResponseSemaphoreHandle, osWaitForever);
+            osSemaphoreRelease(ATResponseSemaphoreHandle);
         }
         else
         {
@@ -72,6 +86,7 @@ ATResponse sendRAWAT(uint8_t *cmd)
     {
         gPendingResponse = AT_ERROR;
     }
+    
     osSemaphoreRelease(ATCommandSemaphoreHandle);
     return gPendingResponse;
 }
@@ -113,7 +128,7 @@ void ATHandlingTaskCode(void *argument)
 
     while (1)
     {
-        atevent = osMessageQueueGet(ATQueueHandle, &new_cmd, NULL, 1000U);   // wait for message
+        atevent = osMessageQueueGet(ATQueueHandle, &new_cmd, NULL, 3000U);   // wait for message
         if(atevent == osErrorTimeout)
         {
             if(PendingCommand!=NULL)
@@ -137,6 +152,7 @@ void ATHandlingTaskCode(void *argument)
         {         
             switch (new_cmd->command)
             {
+                case ATZ:
                 case AT_CFM:
                 case AT_APPKEY:
                 case AT_APPEUI:
@@ -156,7 +172,11 @@ void ATHandlingTaskCode(void *argument)
                     {
                         //malformed CMD_t - should not be happening
                         gPendingResponse = AT_ERROR;
-                        osMemoryPoolFree(mpid_ATCMD_MemPool,PendingCommand);
+                        if(PendingCommand)
+                        {
+                            osMemoryPoolFree(mpid_ATCMD_MemPool,PendingCommand);
+                        }
+                        osMemoryPoolFree(mpid_ATCMD_MemPool,new_cmd);                        
                         PendingCommand = NULL;
                         osSemaphoreRelease(ATResponseSemaphoreHandle);
                         ATTaskFSM = AT_IDLE;
@@ -167,13 +187,14 @@ void ATHandlingTaskCode(void *argument)
             if (new_cmd->response == AT_RX_OK)
             {
                 LoRaWAN_RxEventCallback(new_cmd->rx_payload->Buf, new_cmd->rx_payload->rcvDataLen, new_cmd->rx_payload->rcvPort, new_cmd->rx_payload->rcvRSSI, new_cmd->rx_payload->rcvSNR);
-                osMemoryPoolFree(mpid_LoRaPayload_MemPool, PendingCommand->rx_payload);
-                osMemoryPoolFree(mpid_ATCMD_MemPool, PendingCommand);
+                osMemoryPoolFree(mpid_LoRaPayload_MemPool, PendingCommand->rx_payload);                
+                osMemoryPoolFree(mpid_ATCMD_MemPool,new_cmd);                        
             }
             else if ((new_cmd->response == AT_JOINED) || (new_cmd->response == AT_JOIN_ERROR))
             {
                 LoRaWAN_JoinCallback(new_cmd->response);
                 osMemoryPoolFree(mpid_ATCMD_MemPool, PendingCommand);
+                osMemoryPoolFree(mpid_ATCMD_MemPool,new_cmd);                        
             }
             else if (new_cmd->command == AT_COMMAND_UNDEFINED) // it is a response
             {
@@ -182,7 +203,11 @@ void ATHandlingTaskCode(void *argument)
                 case AT_IDLE:
                 {
                     //unexpected response - ignore
-                    osMemoryPoolFree(mpid_ATCMD_MemPool, PendingCommand);
+                    if (PendingCommand)
+                    {
+                        osMemoryPoolFree(mpid_ATCMD_MemPool, PendingCommand);
+                    }
+                    osMemoryPoolFree(mpid_ATCMD_MemPool,new_cmd);                        
                     break;
                 }
                 case AT_WAITING_RESPONSE:
@@ -190,8 +215,12 @@ void ATHandlingTaskCode(void *argument)
                     if (new_cmd->response == AT_COMMANDS[PendingCommand->command].expected_response)
                     {
                         // all good
-                        gPendingResponse = AT_OK;                     
-                        osMemoryPoolFree(mpid_ATCMD_MemPool, PendingCommand);
+                        gPendingResponse = AT_COMMANDS[PendingCommand->command].expected_response;
+                        if (PendingCommand)
+                        {
+                            osMemoryPoolFree(mpid_ATCMD_MemPool, PendingCommand);
+                        }
+                        osMemoryPoolFree(mpid_ATCMD_MemPool, new_cmd);
                         PendingCommand = NULL;
                         ATTaskFSM = AT_IDLE;
                         osSemaphoreRelease(ATResponseSemaphoreHandle);                        
@@ -204,12 +233,14 @@ void ATHandlingTaskCode(void *argument)
                             CurrentRetries++;
                             send_cmd = PendingCommand;
                             PendingCommand = NULL;
+                            osMemoryPoolFree(mpid_ATCMD_MemPool, new_cmd);
                         }
                         else
                         {
                             // command failure after retries
                             gPendingResponse = new_cmd->response;
                             osMemoryPoolFree(mpid_ATCMD_MemPool, PendingCommand);
+                            osMemoryPoolFree(mpid_ATCMD_MemPool, new_cmd);
                             PendingCommand = NULL;                            
                             ATTaskFSM = AT_IDLE;
                             osSemaphoreRelease(ATResponseSemaphoreHandle);
@@ -221,10 +252,11 @@ void ATHandlingTaskCode(void *argument)
             }
             if (send_cmd != NULL)
             {
+                osSemaphoreAcquire(ATResponseSemaphoreHandle, osWaitForever);
                 PendingCommand = send_cmd;
                 send_cmd = NULL;                
                 ATTaskFSM = AT_WAITING_RESPONSE;
-                SendToUART(send_cmd->tx_payload->Buf,strlen(send_cmd->tx_payload->Buf));
+                SendToUART(PendingCommand->tx_payload->Buf,strlen(PendingCommand->tx_payload->Buf));
             }
         }
     }
@@ -251,11 +283,11 @@ void ATParsingTaskCode(void const *argument)
     
     mpid_ATCMD_MemPool = osMemoryPoolNew(ATCMD_MEMPOOL_OBJECTS, sizeof(CMD_t), NULL);
     mpid_LoRaPayload_MemPool = osMemoryPoolNew(LORAPAYLOAD_MEMPOOL_OBJECTS, sizeof(LORA_PAYLOAD_MEM_BLOCK_t), NULL);
-    
+    Ringbuf_Init();
     uint32_t CurrentRetries = 0;
     while (1)
     {
-        uartevent = osMessageQueueGet(ATQueueHandle, &pMem, NULL, 0U); // wait for message
+        uartevent = osMessageQueueGet(uartQueueHandle, &pMem, NULL,  osWaitForever); // wait for message
         if (uartevent == osOK)
         {
             pATResponse = (CMD_t *)osMemoryPoolAlloc(mpid_ATCMD_MemPool, 0U); // get Mem Block
@@ -303,7 +335,11 @@ void ATParsingTaskCode(void const *argument)
                 {
                     osMemoryPoolFree(mpid_ATCMD_MemPool,pATResponse);                    
                 }
-            }            
+            } 
+            else
+            {
+                while(1);
+            }           
             osMemoryPoolFree(mpid_UART_MemPool,pMem);
         }        
     }

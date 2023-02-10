@@ -75,7 +75,7 @@ typedef struct AT_CMD_DEF
 typedef struct AT_RESPONSE_DEF
 {
   ATResponse response;
-  uint8_t* response_string[16];
+  uint8_t response_string[16];
 } AT_RESPONSE_DEF_t;
 
 extern osThreadId_t ATTaskHandle;

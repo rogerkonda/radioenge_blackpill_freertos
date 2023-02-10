@@ -125,14 +125,18 @@ int32_t labscim_find_char_on_buffer(uint8_t c)
 		/* check your buffer parameter */
 		return(-1);
 	}
-	if (buf.rd_offset > buf.wr_offset)
+	if(buf.level == 0)
+	{
+		return -1;
+	}
+	if (buf.rd_offset < buf.wr_offset)
 	{
 		//no warp
 		for (uint32_t i = buf.rd_offset; i < buf.wr_offset; i++)
 		{
-			if(buf.data[i+buf.rd_offset]==c)
+			if(buf.data[i]==c)
 			{
-				return i-buf.rd_offset;
+				return i-buf.rd_offset+1;
 			}
 		}
 	}
@@ -141,16 +145,16 @@ int32_t labscim_find_char_on_buffer(uint8_t c)
 		//warp
 		for (uint32_t i = buf.rd_offset; i < buf.size; i++)
 		{
-			if(buf.data[i+buf.rd_offset]==c)
+			if(buf.data[i]==c)
 			{
-				return i-buf.rd_offset;
+				return i-buf.rd_offset+1;
 			}
 		}
 		for (uint32_t i = 0; i < buf.wr_offset; i++)
 		{
 			if(buf.data[i]==c)
 			{
-				return buf.size-buf.rd_offset+i;
+				return buf.size-buf.rd_offset+i+1;
 			}
 		}
 	}	
