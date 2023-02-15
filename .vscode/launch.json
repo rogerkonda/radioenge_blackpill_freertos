@@ -16,6 +16,7 @@
                 "interface/stlink.cfg",
                 "target/stm32f4x.cfg"
             ],
+            "rtos": "FreeRTOS",
             "svdFile": "STM32F411.svd",
             "preLaunchTask": "build", // The name of the task defined above
             "runToMain": true

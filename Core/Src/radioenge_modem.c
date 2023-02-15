@@ -8,12 +8,14 @@ volatile JOINED_STATE gJoinedFSM = JOINED_TX;
 volatile RADIO_STATE gRadioState = RADIO_RESET;
 
 extern osThreadId_t ModemMngrTaskHandle;
+extern osThreadId_t ModemSendTaskHandle;
 extern osSemaphoreId_t RadioStateSemaphoreHandle;
 extern osMessageQueueId_t ModemSendQueueHandle;
 extern osSemaphoreId_t LoRaTXSemaphoreHandle;
 extern osEventFlagsId_t ModemStatusFlagsHandle;
 extern osTimerId_t ModemLedTimerHandle;
 extern osMessageQueueId_t uartQueueHandle;
+extern osTimerId_t DutyCycleTimerHandle;
 
 #define NUMBER_OF_STRINGS (7)
 #define STRING_LENGTH (255)
@@ -21,7 +23,8 @@ char gConfigCmds[NUMBER_OF_STRINGS][STRING_LENGTH + 1] = {
     "AT+CFM=0\r\n",
     "AT+APPKEY=00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF\r\n",
     "AT+APPEUI=00:00:00:00:00:00:00:00\r\n",
-    "AT+CHMASK=ff00:0000:0000:0000:0002:0000\r\n",
+    /*"AT+CHMASK=ff00:0000:0000:0000:0002:0000\r\n",*/
+    "AT+CHMASK=0000:00FF:0000:0000:0004:0000\r\n",
     "AT+ADR=1\r\n",
     "AT+NJM=1\r\n",
     "AT+JOIN\r\n"};
@@ -31,12 +34,13 @@ uint32_t gConsecutiveJoinErrors = 0;
 
 void LoRaWAN_JoinCallback(ATResponse response)
 {
+    osSemaphoreAcquire(RadioStateSemaphoreHandle, osWaitForever);
     if (gRadioState == RADIO_JOINING)
     {
         if (response == AT_JOINED)
         {
             gConsecutiveJoinErrors = 0;
-            SetRadioState(RADIO_JOINED);
+            SetRadioState(RADIO_READY);
         }
         else
         {
@@ -48,26 +52,38 @@ void LoRaWAN_JoinCallback(ATResponse response)
         }
         osThreadFlagsSet(ModemMngrTaskHandle, 0x01);
     }
+    osSemaphoreRelease(RadioStateSemaphoreHandle);
+}
+
+void DutyCycleTimerCallback (void *argument) 
+{
+    osSemaphoreAcquire(RadioStateSemaphoreHandle, osWaitForever);
+    if(gRadioState==RADIO_DUTYCYCLED)
+    {
+        SetRadioState(RADIO_READY);
+    }  
+    osSemaphoreRelease(RadioStateSemaphoreHandle);  
 }
 
 void resetRadio(void)
 {
     while (sendRAWAT("ATZ\r\n") != AT_RESET)
     {
-        osDelay(500);
+        osDelay(50000);
     }
     return;
 }
 
+//calls to this function must be protected by semaphore RadioStateSemaphoreHandle
 void SetRadioState(RADIO_STATE state)
-{
-    osSemaphoreAcquire(RadioStateSemaphoreHandle, osWaitForever);
+{    
     gRadioState = state;
-    osSemaphoreRelease(RadioStateSemaphoreHandle);
+    osThreadFlagsSet(ModemMngrTaskHandle, 0x01); 
 }
 
 void ModemLedCallback(void *argument) 
 {
+    //here we use gRadioState without semaphore because a preemption will only cause a momentary led glitch    
     switch(gRadioState)
     {
     case RADIO_RESET:
@@ -94,12 +110,20 @@ void ModemLedCallback(void *argument)
         HAL_GPIO_WritePin(LED4_WHITE_GPIO_Port, LED4_WHITE_Pin, 0);        
         break;       
     }
-    case RADIO_JOINED:
+    case RADIO_READY:
     {
         HAL_GPIO_WritePin(LED1_RED_GPIO_Port, LED1_RED_Pin,0);
         HAL_GPIO_WritePin(LED2_YELLOW_GPIO_Port, LED2_YELLOW_Pin,0);
         HAL_GPIO_WritePin(LED3_GREEN_GPIO_Port, LED3_GREEN_Pin,1);
         HAL_GPIO_WritePin(LED4_WHITE_GPIO_Port, LED4_WHITE_Pin, 0);        
+        break;       
+    }
+    case RADIO_DUTYCYCLED:
+    {
+        HAL_GPIO_WritePin(LED1_RED_GPIO_Port, LED1_RED_Pin,0);
+        HAL_GPIO_WritePin(LED2_YELLOW_GPIO_Port, LED2_YELLOW_Pin,0);
+        HAL_GPIO_WritePin(LED3_GREEN_GPIO_Port, LED3_GREEN_Pin,1);
+        HAL_GPIO_TogglePin(LED4_WHITE_GPIO_Port, LED4_WHITE_Pin);        
         break;       
     }
     default:
@@ -114,8 +138,6 @@ void ModemLedCallback(void *argument)
 }
 
 
-
-
 void ModemManagerTaskCode(void *argument)
 {
     /* USER CODE BEGIN 5 */
@@ -124,11 +146,11 @@ void ModemManagerTaskCode(void *argument)
     uint32_t flags;
     uint32_t modemflags;
     osTimerStart(ModemLedTimerHandle, 50U);
-    osThreadFlagsSet(ModemMngrTaskHandle, 0x01);
-    
+    osThreadFlagsSet(ModemMngrTaskHandle, 0x01);    
     while (1)
     {
         flags = osThreadFlagsWait (0x01, osFlagsWaitAny,osWaitForever);
+        osSemaphoreAcquire(RadioStateSemaphoreHandle, osWaitForever);
         osEventFlagsClear(ModemStatusFlagsHandle, RADIO_STATE_ALL);        
         switch (gRadioState)
         {
@@ -165,13 +187,20 @@ void ModemManagerTaskCode(void *argument)
             // wait for radio callback
             break;
         }
-        case RADIO_JOINED:
+        case RADIO_READY:
         {
-            // now the send thread can work
+            // now we can send data
+            break;
+        }
+        case RADIO_DUTYCYCLED:
+        {
+            // Wait the dutycycle period and return to ready
+            osTimerStart(DutyCycleTimerHandle, 14000U);
             break;
         }
         }
         modemflags = osEventFlagsSet(ModemStatusFlagsHandle, gRadioState);
+        osSemaphoreRelease(RadioStateSemaphoreHandle);
     }
 }
 
@@ -181,8 +210,8 @@ uint8_t gSendBuffer[OUT_BUFFER_SIZE+16];
 
 
 osStatus_t LoRaSend(uint32_t LoraWANPort,uint8_t* msg)
-{    
-    osSemaphoreAcquire(LoRaTXSemaphoreHandle,osWaitForever);
+{   
+    LoRaWaitDutyCycle();
     return LoRaSendNow(LoraWANPort,msg);    
 }
 
@@ -212,7 +241,7 @@ size_t bin_encode(void* in, size_t in_size, uint8_t* out, size_t max_out_size)
 
 osStatus_t LoRaSendB(uint32_t LoraWANPort, uint8_t* msg, size_t size)
 {
-    osSemaphoreAcquire(LoRaTXSemaphoreHandle,osWaitForever);
+    LoRaWaitDutyCycle();     
     return LoRaSendBNow(LoraWANPort,msg,size);    
 }
 
@@ -221,59 +250,45 @@ osStatus_t LoRaSendB(uint32_t LoraWANPort, uint8_t* msg, size_t size)
 
 void LoRaWaitDutyCycle()
 {
-    osSemaphoreAcquire(LoRaTXSemaphoreHandle,osWaitForever);
+   osEventFlagsWait(ModemStatusFlagsHandle, RADIO_READY, osFlagsWaitAny | osFlagsNoClear, osWaitForever);
+   osSemaphoreAcquire(LoRaTXSemaphoreHandle,osWaitForever);    
+   osEventFlagsWait(ModemStatusFlagsHandle, RADIO_READY, osFlagsWaitAny | osFlagsNoClear, osWaitForever);
 }
 
 osStatus_t LoRaSendNow(uint32_t LoraWANPort, uint8_t* msg)
 {
-    if (gRadioState == RADIO_JOINED)
+    osStatus_t ret = osError;    
+    osSemaphoreAcquire(RadioStateSemaphoreHandle, osWaitForever);
+    if (gRadioState == RADIO_READY)
     {
         snprintf(gSendBuffer, OUT_BUFFER_SIZE + 16, "AT+SEND=%d:%s\r\n", LoraWANPort, msg);
-        if (sendRAWAT(gSendBuffer) != AT_OK)
+        if (sendRAWAT(gSendBuffer) == AT_TX_OK)
         {
-            osThreadFlagsSet(ModemMngrTaskHandle, 0x01);
-            return osOK;
-        }
-        else
-        {
-            osSemaphoreRelease(LoRaTXSemaphoreHandle);
-        }
-    }
-    return osError;
+            SetRadioState(RADIO_DUTYCYCLED);
+            ret = osOK;
+        }        
+    }    
+    osSemaphoreRelease(RadioStateSemaphoreHandle);
+    osSemaphoreRelease(LoRaTXSemaphoreHandle);
+    return ret;
 }
 
 osStatus_t LoRaSendBNow(uint32_t LoraWANPort, uint8_t* msg, size_t size)
 {
-    if (gRadioState == RADIO_JOINED)
+    osStatus_t ret = osError;
+    osSemaphoreAcquire(RadioStateSemaphoreHandle, osWaitForever);
+    if (gRadioState == RADIO_READY)
     {
         size_t encoded_size = bin_encode((void *)(msg), size, gEncodedString, OUT_BUFFER_SIZE);
         snprintf(gSendBuffer, OUT_BUFFER_SIZE + 16, "AT+SENDB=%d:%s\r\n", LoraWANPort, gEncodedString);
-        if (sendRAWAT(gSendBuffer) != AT_OK)
+        if (sendRAWAT(gSendBuffer) == AT_TX_OK)
         {
-            osThreadFlagsSet(ModemMngrTaskHandle, 0x01);
-            return osOK;
-        }
-        else
-        {
-            osSemaphoreRelease(LoRaTXSemaphoreHandle);
+            SetRadioState(RADIO_DUTYCYCLED);
+            ret = osOK;
         }
     }
-    return osError;
-}
-
-
-void ModemSendTaskCode(void const *argument)
-{
-    uint32_t DutyCycle_ms = *(uint32_t*)argument;
-    uint32_t flags;    
-    osSemaphoreAcquire(LoRaTXSemaphoreHandle,osWaitForever);
-    while (1)
-    {
-        flags = osThreadFlagsWait (0x01, osFlagsWaitAny,osWaitForever);        
-        {
-            osDelay	(DutyCycle_ms);	
-            osSemaphoreRelease(LoRaTXSemaphoreHandle);    
-        }        
-    }
+    osSemaphoreRelease(RadioStateSemaphoreHandle);
+    osSemaphoreRelease(LoRaTXSemaphoreHandle);
+    return ret;
 }
 /* USER CODE END StartATHandling */

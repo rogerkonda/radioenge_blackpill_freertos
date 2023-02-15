@@ -20,6 +20,8 @@ typedef enum
   AT_NJM,
   AT_JOIN,
   AT_CHMASK,
+  AT_SENDB,
+  AT_SEND,
   AT_COMMAND_UNDEFINED,
   NUM_AT_COMMANDS
 } ATCommand;
@@ -61,6 +63,7 @@ typedef struct CMD
     LORA_PAYLOAD_MEM_BLOCK_t* rx_payload;  
     UART_MEM_BLOCK_t* tx_payload;
   };
+  osThreadId_t RequestedBy;
 } CMD_t;
 
 typedef struct AT_CMD_DEF

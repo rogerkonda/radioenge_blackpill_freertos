@@ -112,18 +112,6 @@ const osThreadAttr_t ModemMngrTask_attributes = {
   .stack_size = sizeof(ModemMngrTaskBuffer),
   .priority = (osPriority_t) osPriorityNormal7,
 };
-/* Definitions for ModemSendTask */
-osThreadId_t ModemSendTaskHandle;
-uint32_t ModemSendTaskBuffer[ 128 ];
-osStaticThreadDef_t ModemSendTaskControlBlock;
-const osThreadAttr_t ModemSendTask_attributes = {
-  .name = "ModemSendTask",
-  .cb_mem = &ModemSendTaskControlBlock,
-  .cb_size = sizeof(ModemSendTaskControlBlock),
-  .stack_mem = &ModemSendTaskBuffer[0],
-  .stack_size = sizeof(ModemSendTaskBuffer),
-  .priority = (osPriority_t) osPriorityNormal6,
-};
 /* Definitions for AppSendTask */
 osThreadId_t AppSendTaskHandle;
 uint32_t SendTemperatureBuffer[ 128 ];
@@ -184,6 +172,14 @@ const osTimerAttr_t ModemLedTimer_attributes = {
   .name = "ModemLedTimer",
   .cb_mem = &ModemLedTimerControlBlock,
   .cb_size = sizeof(ModemLedTimerControlBlock),
+};
+/* Definitions for DutyCycleTimer */
+osTimerId_t DutyCycleTimerHandle;
+osStaticTimerDef_t DutyCycleTimerControlBlock;
+const osTimerAttr_t DutyCycleTimer_attributes = {
+  .name = "DutyCycleTimer",
+  .cb_mem = &DutyCycleTimerControlBlock,
+  .cb_size = sizeof(DutyCycleTimerControlBlock),
 };
 /* Definitions for ATCommandSemaphore */
 osSemaphoreId_t ATCommandSemaphoreHandle;
@@ -251,10 +247,10 @@ extern void ATParsingTaskCode(void *argument);
 extern void ATHandlingTaskCode(void *argument);
 extern void UARTProcTaskCode(void *argument);
 extern void ModemManagerTaskCode(void *argument);
-extern void ModemSendTaskCode(void *argument);
 extern void AppSendTaskCode(void *argument);
 extern void PeriodicSendTimerCallback(void *argument);
 extern void ModemLedCallback(void *argument);
+extern void DutyCycleTimerCallback(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -337,6 +333,9 @@ int main(void)
   /* creation of ModemLedTimer */
   ModemLedTimerHandle = osTimerNew(ModemLedCallback, osTimerPeriodic, NULL, &ModemLedTimer_attributes);
 
+  /* creation of DutyCycleTimer */
+  DutyCycleTimerHandle = osTimerNew(DutyCycleTimerCallback, osTimerOnce, NULL, &DutyCycleTimer_attributes);
+
   /* USER CODE BEGIN RTOS_TIMERS */
   /* start timers, add new ones, ... */
   /* USER CODE END RTOS_TIMERS */
@@ -370,9 +369,6 @@ int main(void)
 
   /* creation of ModemMngrTask */
   ModemMngrTaskHandle = osThreadNew(ModemManagerTaskCode, NULL, &ModemMngrTask_attributes);
-
-  /* creation of ModemSendTask */
-  ModemSendTaskHandle = osThreadNew(ModemSendTaskCode, NULL, &ModemSendTask_attributes);
 
   /* creation of AppSendTask */
   AppSendTaskHandle = osThreadNew(AppSendTaskCode, NULL, &AppSendTask_attributes);

@@ -230,6 +230,13 @@ void UARTProcTaskCode(void const *argument)
 			{ // Mem Block was available
 				taskENTER_CRITICAL();
 				labscim_buffer_retrieve(pMem->Buf, size);
+				//Radioenge	modem sometimes sends \n\r instead \r\n -> filters this crap
+				uint8_t b;
+				labscim_buffer_peek(&b,sizeof(uint8_t));
+				if(b=='\r')
+				{
+					labscim_buffer_retrieve(&b, sizeof(uint8_t));
+				}
 				taskEXIT_CRITICAL();
 				osMessageQueuePut(uartQueueHandle, &pMem,0U,0U);
 			}

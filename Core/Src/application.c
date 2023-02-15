@@ -29,13 +29,12 @@ void AppSendTaskCode(void *argument)
     osTimerStart(PeriodicSendTimerHandle, 30000U);
 
     while (1)
-    {
-        modemflags = osEventFlagsWait(ModemStatusFlagsHandle, RADIO_JOINED, osFlagsWaitAny | osFlagsNoClear, osWaitForever);
+    {        
         LoRaWaitDutyCycle();
         HAL_ADC_Start(&hadc1);
         HAL_ADC_PollForConversion(&hadc1, 100);
         read = HAL_ADC_GetValue(&hadc1);
-        temp = (int32_t)(100 * ((float)read / 4096));
+        temp = (int32_t)(330 * ((float)read / 4096));
         LoRaSendBNow(2, (uint8_t *)&temp, sizeof(int32_t));
         osThreadFlagsClear(0x01);
         osThreadFlagsWait(0x01, osFlagsWaitAny, osWaitForever);        

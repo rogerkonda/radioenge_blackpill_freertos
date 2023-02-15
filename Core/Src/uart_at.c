@@ -2,6 +2,7 @@
 #include "uart_at.h"
 #include "uartRingBufDMA.h"
 
+#define SEND_RAW_AT_WAIT_FLAG (0x80)
 
 uint8_t cmd_buffer[20];
 uint8_t cmd_len = 0;
@@ -13,32 +14,32 @@ extern osMessageQueueId_t uartQueueHandle;
 ATResponse ParseAT(char *buffer);
 ATResponse ParseResponse(char *buffer);
 
-const AT_CMD_DEF_t AT_COMMANDS[NUM_AT_COMMANDS] = 
-{
-    {.command =ATZ,         .expected_response=AT_RESET,    .retries =3,        .timeout_ms=300,    .command_string="ATZ"},
-    {.command =AT_CFM,      .expected_response=AT_OK,       .retries =3,        .timeout_ms=300,    .command_string="AT+CFM"},
-    {.command =AT_APPKEY,   .expected_response=AT_OK,       .retries =3,        .timeout_ms=300,    .command_string="AT+APPKEY"},
-    {.command =AT_APPEUI,   .expected_response=AT_OK,       .retries =3,        .timeout_ms=300,    .command_string="AT+APPEUI"},
-    {.command =AT_ADR,      .expected_response=AT_OK,       .retries =3,        .timeout_ms=300,    .command_string="AT+ADR"},
-    {.command =AT_NJM,      .expected_response=AT_OK,       .retries =3,        .timeout_ms=300,    .command_string="AT+NJM"},
-    {.command =AT_JOIN,     .expected_response=AT_OK,       .retries =3,        .timeout_ms=300,    .command_string="AT+JOIN"},
-    {.command =AT_CHMASK,   .expected_response=AT_OK,       .retries =3,        .timeout_ms=300,    .command_string="AT+CHMASK"},
-    {.command =AT_COMMAND_UNDEFINED,   .expected_response=AT_OK,       .retries =3,     .timeout_ms=300,    .command_string="UNDEFINED"}
-};
+const AT_CMD_DEF_t AT_COMMANDS[NUM_AT_COMMANDS] =
+    {
+        {.command = ATZ, .expected_response = AT_RESET, .retries = 3, .timeout_ms = 300, .command_string = "ATZ"},
+        {.command = AT_CFM, .expected_response = AT_OK, .retries = 3, .timeout_ms = 300, .command_string = "AT+CFM"},
+        {.command = AT_APPKEY, .expected_response = AT_OK, .retries = 3, .timeout_ms = 300, .command_string = "AT+APPKEY"},
+        {.command = AT_APPEUI, .expected_response = AT_OK, .retries = 3, .timeout_ms = 300, .command_string = "AT+APPEUI"},
+        {.command = AT_ADR, .expected_response = AT_OK, .retries = 3, .timeout_ms = 300, .command_string = "AT+ADR"},
+        {.command = AT_NJM, .expected_response = AT_OK, .retries = 3, .timeout_ms = 300, .command_string = "AT+NJM"},
+        {.command = AT_JOIN, .expected_response = AT_OK, .retries = 3, .timeout_ms = 300, .command_string = "AT+JOIN"},
+        {.command = AT_CHMASK, .expected_response = AT_OK, .retries = 3, .timeout_ms = 300, .command_string = "AT+CHMASK"},
+        {.command = AT_SENDB, .expected_response = AT_TX_OK, .retries = 3, .timeout_ms = 300, .command_string = "AT+SENDB"},
+        {.command = AT_SEND, .expected_response = AT_TX_OK, .retries = 3, .timeout_ms = 300, .command_string = "AT+SEND"},
+        {.command = AT_COMMAND_UNDEFINED, .expected_response = AT_OK, .retries = 3, .timeout_ms = 300, .command_string = "UNDEFINED"}};
 
-const AT_RESPONSE_DEF_t AT_RESPONSES[NUM_AT_RESPONSES] = 
-{
-    {.response=AT_OK,           .response_string = "AT_OK"},
-    {.response=AT_TX_OK,        .response_string = "AT_TX_OK"},
-    {.response=AT_RX_OK,        .response_string = "RX:"},
-    {.response=AT_ERROR,        .response_string = "AT_ERROR"},
-    {.response=AT_JOINED,       .response_string = "AT_JOIN_OK"},
-    {.response=AT_TIMEOUT,      .response_string = "AT_TIMEOUT"},
-    {.response=AT_BUSY,         .response_string = "AT_BUSY"},
-    {.response=AT_JOIN_ERROR,   .response_string = "AT_JOIN_ERROR"},
-    {.response=AT_RESET,        .response_string = "Radioenge"},
-    {.response=AT_RESPONSE_UNDEFINED,        .response_string = "UNDEFINED"}
-};
+const AT_RESPONSE_DEF_t AT_RESPONSES[NUM_AT_RESPONSES] =
+    {
+        {.response = AT_OK, .response_string = "AT_OK"},
+        {.response = AT_TX_OK, .response_string = "AT_TX_OK"},
+        {.response = AT_RX_OK, .response_string = "RX:"},
+        {.response = AT_ERROR, .response_string = "AT_ERROR"},
+        {.response = AT_JOINED, .response_string = "AT_JOIN_OK"},
+        {.response = AT_TIMEOUT, .response_string = "AT_TIMEOUT"},
+        {.response = AT_BUSY, .response_string = "AT_BUSY"},
+        {.response = AT_JOIN_ERROR, .response_string = "AT_JOIN_ERROR"},
+        {.response = AT_RESET, .response_string = "Radioenge"},
+        {.response = AT_RESPONSE_UNDEFINED, .response_string = "UNDEFINED"}};
 
 extern void LoRaWAN_RxEventCallback(uint8_t *data, uint32_t length, uint32_t port, int32_t rssi, int32_t snr);
 extern void LoRaWAN_JoinCallback(ATResponse response);
@@ -62,6 +63,7 @@ ATResponse sendRAWAT(uint8_t *cmd)
             memcpy(gATPayload.Buf,cmd,strlen(cmd)+1);
             pATCommand->tx_payload = &gATPayload;
             gPendingResponse = AT_RESPONSE_UNDEFINED;
+            pATCommand->RequestedBy = osThreadGetId();	
             do
             {
                 ret = osMessageQueuePut(ATQueueHandle, &pATCommand, 0U, 250U);
@@ -73,8 +75,9 @@ ATResponse sendRAWAT(uint8_t *cmd)
                     }
                 }
             }while(ret != osOK);
-            osSemaphoreAcquire(ATResponseSemaphoreHandle, osWaitForever);
-            osSemaphoreRelease(ATResponseSemaphoreHandle);
+            //wait for response
+            osThreadFlagsClear (SEND_RAW_AT_WAIT_FLAG);            
+            osThreadFlagsWait (SEND_RAW_AT_WAIT_FLAG, osFlagsWaitAny, osWaitForever);            
         }
         else
         {
@@ -141,9 +144,9 @@ void ATHandlingTaskCode(void *argument)
                 else
                 {                    
                     gPendingResponse = AT_TIMEOUT;
+                    osThreadFlagsSet(PendingCommand->RequestedBy, SEND_RAW_AT_WAIT_FLAG);
                     osMemoryPoolFree(mpid_ATCMD_MemPool,PendingCommand);
-                    PendingCommand = NULL;
-                    osSemaphoreRelease(ATResponseSemaphoreHandle);
+                    PendingCommand = NULL;                    
                     ATTaskFSM = AT_IDLE;
                 }
             }
@@ -159,6 +162,8 @@ void ATHandlingTaskCode(void *argument)
                 case AT_ADR:
                 case AT_NJM:
                 case AT_JOIN:
+                case AT_SENDB:
+                case AT_SEND:
                 case AT_CHMASK:
                 {
                     send_cmd = new_cmd;
@@ -174,11 +179,11 @@ void ATHandlingTaskCode(void *argument)
                         gPendingResponse = AT_ERROR;
                         if(PendingCommand)
                         {
+                            osThreadFlagsSet(PendingCommand->RequestedBy, SEND_RAW_AT_WAIT_FLAG);
                             osMemoryPoolFree(mpid_ATCMD_MemPool,PendingCommand);
                         }
                         osMemoryPoolFree(mpid_ATCMD_MemPool,new_cmd);                        
-                        PendingCommand = NULL;
-                        osSemaphoreRelease(ATResponseSemaphoreHandle);
+                        PendingCommand = NULL;                        
                         ATTaskFSM = AT_IDLE;
                     }                    
                     break;
@@ -218,12 +223,12 @@ void ATHandlingTaskCode(void *argument)
                         gPendingResponse = AT_COMMANDS[PendingCommand->command].expected_response;
                         if (PendingCommand)
                         {
+                            osThreadFlagsSet(PendingCommand->RequestedBy, SEND_RAW_AT_WAIT_FLAG);
                             osMemoryPoolFree(mpid_ATCMD_MemPool, PendingCommand);
                         }
                         osMemoryPoolFree(mpid_ATCMD_MemPool, new_cmd);
                         PendingCommand = NULL;
-                        ATTaskFSM = AT_IDLE;
-                        osSemaphoreRelease(ATResponseSemaphoreHandle);                        
+                        ATTaskFSM = AT_IDLE;                        
                     }
                     else
                     {
@@ -239,25 +244,27 @@ void ATHandlingTaskCode(void *argument)
                         {
                             // command failure after retries
                             gPendingResponse = new_cmd->response;
-                            osMemoryPoolFree(mpid_ATCMD_MemPool, PendingCommand);
+                            if(PendingCommand != NULL)
+                            {
+                                osThreadFlagsSet(PendingCommand->RequestedBy, SEND_RAW_AT_WAIT_FLAG);
+                                osMemoryPoolFree(mpid_ATCMD_MemPool, PendingCommand);
+                            }
                             osMemoryPoolFree(mpid_ATCMD_MemPool, new_cmd);
                             PendingCommand = NULL;                            
-                            ATTaskFSM = AT_IDLE;
-                            osSemaphoreRelease(ATResponseSemaphoreHandle);
+                            ATTaskFSM = AT_IDLE;                            
                         }
                     }
                     break;
                 }
                 }
-            }
-            if (send_cmd != NULL)
-            {
-                osSemaphoreAcquire(ATResponseSemaphoreHandle, osWaitForever);
-                PendingCommand = send_cmd;
-                send_cmd = NULL;                
-                ATTaskFSM = AT_WAITING_RESPONSE;
-                SendToUART(PendingCommand->tx_payload->Buf,strlen(PendingCommand->tx_payload->Buf));
-            }
+            }            
+        }
+        if (send_cmd != NULL)
+        {
+            PendingCommand = send_cmd;
+            send_cmd = NULL;
+            ATTaskFSM = AT_WAITING_RESPONSE;
+            SendToUART(PendingCommand->tx_payload->Buf, strlen(PendingCommand->tx_payload->Buf));
         }
     }
     /* USER CODE END StartCmdProcessing */
