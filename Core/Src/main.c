@@ -159,14 +159,6 @@ const osMessageQueueAttr_t ModemSendQueue_attributes = {
   .mq_mem = &ModemSendQueueBuffer,
   .mq_size = sizeof(ModemSendQueueBuffer)
 };
-/* Definitions for PeriodicSendTimer */
-osTimerId_t PeriodicSendTimerHandle;
-osStaticTimerDef_t PeriodicSendTimerControlBlock;
-const osTimerAttr_t PeriodicSendTimer_attributes = {
-  .name = "PeriodicSendTimer",
-  .cb_mem = &PeriodicSendTimerControlBlock,
-  .cb_size = sizeof(PeriodicSendTimerControlBlock),
-};
 /* Definitions for ModemLedTimer */
 osTimerId_t ModemLedTimerHandle;
 osStaticTimerDef_t ModemLedTimerControlBlock;
@@ -251,7 +243,6 @@ extern void ATHandlingTaskCode(void *argument);
 extern void UARTProcTaskCode(void *argument);
 extern void ModemManagerTaskCode(void *argument);
 extern void AppSendTaskCode(void *argument);
-extern void PeriodicSendTimerCallback(void *argument);
 extern void ModemLedCallback(void *argument);
 extern void DutyCycleTimerCallback(void *argument);
 
@@ -348,9 +339,6 @@ int main(void)
   /* USER CODE END RTOS_SEMAPHORES */
 
   /* Create the timer(s) */
-  /* creation of PeriodicSendTimer */
-  PeriodicSendTimerHandle = osTimerNew(PeriodicSendTimerCallback, osTimerPeriodic, NULL, &PeriodicSendTimer_attributes);
-
   /* creation of ModemLedTimer */
   ModemLedTimerHandle = osTimerNew(ModemLedCallback, osTimerPeriodic, NULL, &ModemLedTimer_attributes);
 

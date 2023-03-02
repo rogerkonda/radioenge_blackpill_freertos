@@ -68,7 +68,7 @@
 #define configTICK_RATE_HZ                       ((TickType_t)1000)
 #define configMAX_PRIORITIES                     ( 56 )
 #define configMINIMAL_STACK_SIZE                 ((uint16_t)128)
-#define configTOTAL_HEAP_SIZE                    ((size_t)4096)
+#define configTOTAL_HEAP_SIZE                    ((size_t)2048)
 #define configMAX_TASK_NAME_LEN                  ( 16 )
 #define configUSE_TRACE_FACILITY                 1
 #define configUSE_16_BIT_TICKS                   0
@@ -166,6 +166,10 @@ standard names. */
 
 /* USER CODE BEGIN Defines */
 /* Section where parameter definitions can be added (for instance, to override default ones in FreeRTOS.h) */
+#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() CONFIGURE_TIMER_FOR_RUN_TIME_STATS()/* Define this to initialize your timer/counter */
+#define portGET_RUN_TIME_COUNTER_VALUE() GET_RUN_TIME_COUNTER_VALUE()        /* Define this to sample the timer/counter */
+#define configGENERATE_RUN_TIME_STATS (1)
+#define configRECORD_STACK_HIGH_ADDRESS (1)
 /* USER CODE END Defines */
 
 #if defined(__ICCARM__) || defined(__CC_ARM) || defined(__GNUC__)
@@ -184,11 +188,5 @@ placed into the low power state respectively. */
                                       }while(0)
 #define configPOST_SLEEP_PROCESSING                       PostSleepProcessing
 #endif /* configUSE_TICKLESS_IDLE == 1 */
-
-#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() CONFIGURE_TIMER_FOR_RUN_TIME_STATS()/* Define this to initialize your timer/counter */
-#define portGET_RUN_TIME_COUNTER_VALUE() GET_RUN_TIME_COUNTER_VALUE()        /* Define this to sample the timer/counter */
-#define configGENERATE_RUN_TIME_STATS (1)
-#define configRECORD_STACK_HIGH_ADDRESS (1)
-
 
 #endif /* FREERTOS_CONFIG_H */
