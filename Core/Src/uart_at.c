@@ -26,6 +26,7 @@ const AT_CMD_DEF_t AT_COMMANDS[NUM_AT_COMMANDS] =
         {.command = AT_CHMASK, .expected_response = AT_OK, .retries = 3, .timeout_ms = 300, .command_string = "AT+CHMASK"},
         {.command = AT_SENDB, .expected_response = AT_TX_OK, .retries = 3, .timeout_ms = 300, .command_string = "AT+SENDB"},
         {.command = AT_SEND, .expected_response = AT_TX_OK, .retries = 3, .timeout_ms = 300, .command_string = "AT+SEND"},
+        {.command = AT, .expected_response = AT_OK, .retries = 3, .timeout_ms = 300, .command_string = "AT\r\n"},
         {.command = AT_COMMAND_UNDEFINED, .expected_response = AT_OK, .retries = 3, .timeout_ms = 300, .command_string = "UNDEFINED"}};
 
 const AT_RESPONSE_DEF_t AT_RESPONSES[NUM_AT_RESPONSES] =
@@ -165,6 +166,7 @@ void ATHandlingTaskCode(void *argument)
                 case AT_SENDB:
                 case AT_SEND:
                 case AT_CHMASK:
+                case AT:
                 {
                     send_cmd = new_cmd;
                     CurrentRetries = 0;
