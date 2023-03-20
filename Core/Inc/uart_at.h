@@ -22,6 +22,7 @@ typedef enum
   AT_CHMASK,
   AT_SENDB,
   AT_SEND,
+  AT,
   AT_COMMAND_UNDEFINED,
   NUM_AT_COMMANDS
 } ATCommand;
