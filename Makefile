@@ -155,6 +155,11 @@ C_INCLUDES =  \
 -IMiddlewares/ST/STM32_USB_Device_Library/Core/Inc \
 -IMiddlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc
 
+ifeq ($(OS),Windows_NT)
+	MAKEFLAGS += -j$(nproc)
+else
+	MAKEFLAGS += -j$(nproc)
+endif
 
 # compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
@@ -218,8 +223,11 @@ $(BUILD_DIR):
 # clean up
 #######################################
 clean:
+ifeq ($(OS),Windows_NT)
 	rd /s /q $(BUILD_DIR)
-#	-rm -fR $(BUILD_DIR)
+else
+	rm -fR $(BUILD_DIR)    
+endif
   
 #######################################
 # dependencies

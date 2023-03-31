@@ -8,7 +8,7 @@
             "type": "shell",
             "command": "make",
             "args": [
-                "-j4"
+                ""
             ],
             "group": "build",
             "presentation": {
