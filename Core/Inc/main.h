@@ -49,6 +49,8 @@ extern "C" {
 
 /* USER CODE END EM */
 
+void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
+
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
 
@@ -65,6 +67,14 @@ void Error_Handler(void);
 #define LED4_WHITE_GPIO_Port GPIOA
 #define LED2_YELLOW_Pin GPIO_PIN_4
 #define LED2_YELLOW_GPIO_Port GPIOA
+#define BRIDGE_1_EN_Pin GPIO_PIN_6
+#define BRIDGE_1_EN_GPIO_Port GPIOA
+#define BRIDGE_1A_Pin GPIO_PIN_2
+#define BRIDGE_1A_GPIO_Port GPIOB
+#define BRIDGE_2_EN_Pin GPIO_PIN_12
+#define BRIDGE_2_EN_GPIO_Port GPIOB
+#define BRIDGE_3A_Pin GPIO_PIN_13
+#define BRIDGE_3A_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
