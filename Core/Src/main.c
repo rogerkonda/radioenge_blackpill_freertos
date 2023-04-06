@@ -161,14 +161,6 @@ const osMessageQueueAttr_t ModemSendQueue_attributes = {
   .mq_mem = &ModemSendQueueBuffer,
   .mq_size = sizeof(ModemSendQueueBuffer)
 };
-/* Definitions for PeriodicSendTimer */
-osTimerId_t PeriodicSendTimerHandle;
-osStaticTimerDef_t PeriodicSendTimerControlBlock;
-const osTimerAttr_t PeriodicSendTimer_attributes = {
-  .name = "PeriodicSendTimer",
-  .cb_mem = &PeriodicSendTimerControlBlock,
-  .cb_size = sizeof(PeriodicSendTimerControlBlock),
-};
 /* Definitions for ModemLedTimer */
 osTimerId_t ModemLedTimerHandle;
 osStaticTimerDef_t ModemLedTimerControlBlock;
@@ -354,9 +346,6 @@ int main(void)
   /* USER CODE END RTOS_SEMAPHORES */
 
   /* Create the timer(s) */
-  /* creation of PeriodicSendTimer */
-  PeriodicSendTimerHandle = osTimerNew(PeriodicSendTimerCallback, osTimerPeriodic, NULL, &PeriodicSendTimer_attributes);
-
   /* creation of ModemLedTimer */
   ModemLedTimerHandle = osTimerNew(ModemLedCallback, osTimerPeriodic, NULL, &ModemLedTimer_attributes);
 
@@ -556,6 +545,7 @@ static void MX_TIM1_Init(void)
   htim1.Instance = TIM1;
   htim1.Init.Prescaler = 0;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
+
   htim1.Init.Period = 9600-1;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
