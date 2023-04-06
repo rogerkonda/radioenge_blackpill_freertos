@@ -40,6 +40,7 @@ const AT_RESPONSE_DEF_t AT_RESPONSES[NUM_AT_RESPONSES] =
         {.response = AT_BUSY, .response_string = "AT_BUSY"},
         {.response = AT_JOIN_ERROR, .response_string = "AT_JOIN_ERROR"},
         {.response = AT_RESET, .response_string = "Radioenge"},
+        {.response = AT_NO_NETWORK_JOINED, .response_string = "AT_NO_NETWORK_JOINED"},
         {.response = AT_RESPONSE_UNDEFINED, .response_string = "UNDEFINED"}};
 
 extern void LoRaWAN_RxEventCallback(uint8_t *data, uint32_t length, uint32_t port, int32_t rssi, int32_t snr);

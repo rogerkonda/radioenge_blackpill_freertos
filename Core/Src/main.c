@@ -70,7 +70,7 @@ const osThreadAttr_t defaultTask_attributes = {
 };
 /* Definitions for ATParsingTask */
 osThreadId_t ATParsingTaskHandle;
-uint32_t ATParsingTaskBuffer[ 128 ];
+uint32_t ATParsingTaskBuffer[ 512 ];
 osStaticThreadDef_t ATParsingTaskControlBlock;
 const osThreadAttr_t ATParsingTask_attributes = {
   .name = "ATParsingTask",
@@ -82,7 +82,7 @@ const osThreadAttr_t ATParsingTask_attributes = {
 };
 /* Definitions for ATHandlingTask */
 osThreadId_t ATHandlingTaskHandle;
-uint32_t ATHandlingTaskBuffer[ 128 ];
+uint32_t ATHandlingTaskBuffer[ 512 ];
 osStaticThreadDef_t ATHandlingTaskControlBlock;
 const osThreadAttr_t ATHandlingTask_attributes = {
   .name = "ATHandlingTask",
@@ -94,7 +94,7 @@ const osThreadAttr_t ATHandlingTask_attributes = {
 };
 /* Definitions for UARTProcTask */
 osThreadId_t UARTProcTaskHandle;
-uint32_t UARTProcTaskBuffer[ 128 ];
+uint32_t UARTProcTaskBuffer[ 512 ];
 osStaticThreadDef_t UARTProcTaskControlBlock;
 const osThreadAttr_t UARTProcTask_attributes = {
   .name = "UARTProcTask",
@@ -106,7 +106,7 @@ const osThreadAttr_t UARTProcTask_attributes = {
 };
 /* Definitions for ModemMngrTask */
 osThreadId_t ModemMngrTaskHandle;
-uint32_t ModemMngrTaskBuffer[ 128 ];
+uint32_t ModemMngrTaskBuffer[ 512 ];
 osStaticThreadDef_t ModemMngrTaskControlBlock;
 const osThreadAttr_t ModemMngrTask_attributes = {
   .name = "ModemMngrTask",
@@ -118,7 +118,7 @@ const osThreadAttr_t ModemMngrTask_attributes = {
 };
 /* Definitions for AppSendTask */
 osThreadId_t AppSendTaskHandle;
-uint32_t SendTemperatureBuffer[ 128 ];
+uint32_t SendTemperatureBuffer[ 512 ];
 osStaticThreadDef_t SendTemperatureControlBlock;
 const osThreadAttr_t AppSendTask_attributes = {
   .name = "AppSendTask",
@@ -545,7 +545,8 @@ static void MX_TIM1_Init(void)
   htim1.Instance = TIM1;
   htim1.Init.Prescaler = 0;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 65535;
+
+  htim1.Init.Period = 9600-1;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -569,7 +570,7 @@ static void MX_TIM1_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 0;
+  sConfigOC.Pulse = 9600-1;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
@@ -664,7 +665,7 @@ static void MX_TIM3_Init(void)
   htim3.Instance = TIM3;
   htim3.Init.Prescaler = 0;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 65535;
+  htim3.Init.Period = 9600-1;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
@@ -687,7 +688,7 @@ static void MX_TIM3_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 0;
+  sConfigOC.Pulse = 9600-1;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
