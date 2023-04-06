@@ -70,7 +70,7 @@ const osThreadAttr_t defaultTask_attributes = {
 };
 /* Definitions for ATParsingTask */
 osThreadId_t ATParsingTaskHandle;
-uint32_t ATParsingTaskBuffer[ 128 ];
+uint32_t ATParsingTaskBuffer[ 512 ];
 osStaticThreadDef_t ATParsingTaskControlBlock;
 const osThreadAttr_t ATParsingTask_attributes = {
   .name = "ATParsingTask",
@@ -82,7 +82,7 @@ const osThreadAttr_t ATParsingTask_attributes = {
 };
 /* Definitions for ATHandlingTask */
 osThreadId_t ATHandlingTaskHandle;
-uint32_t ATHandlingTaskBuffer[ 128 ];
+uint32_t ATHandlingTaskBuffer[ 512 ];
 osStaticThreadDef_t ATHandlingTaskControlBlock;
 const osThreadAttr_t ATHandlingTask_attributes = {
   .name = "ATHandlingTask",
@@ -94,7 +94,7 @@ const osThreadAttr_t ATHandlingTask_attributes = {
 };
 /* Definitions for UARTProcTask */
 osThreadId_t UARTProcTaskHandle;
-uint32_t UARTProcTaskBuffer[ 128 ];
+uint32_t UARTProcTaskBuffer[ 512 ];
 osStaticThreadDef_t UARTProcTaskControlBlock;
 const osThreadAttr_t UARTProcTask_attributes = {
   .name = "UARTProcTask",
@@ -106,7 +106,7 @@ const osThreadAttr_t UARTProcTask_attributes = {
 };
 /* Definitions for ModemMngrTask */
 osThreadId_t ModemMngrTaskHandle;
-uint32_t ModemMngrTaskBuffer[ 128 ];
+uint32_t ModemMngrTaskBuffer[ 512 ];
 osStaticThreadDef_t ModemMngrTaskControlBlock;
 const osThreadAttr_t ModemMngrTask_attributes = {
   .name = "ModemMngrTask",
@@ -118,7 +118,7 @@ const osThreadAttr_t ModemMngrTask_attributes = {
 };
 /* Definitions for AppSendTask */
 osThreadId_t AppSendTaskHandle;
-uint32_t SendTemperatureBuffer[ 128 ];
+uint32_t SendTemperatureBuffer[ 512 ];
 osStaticThreadDef_t SendTemperatureControlBlock;
 const osThreadAttr_t AppSendTask_attributes = {
   .name = "AppSendTask",
