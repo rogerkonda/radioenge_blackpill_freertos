@@ -307,7 +307,7 @@ void ATParsingTaskCode(void const *argument)
                 pATResponse->response = ParseResponse(pMem->Buf);
                 if(pATResponse!=AT_RESPONSE_UNDEFINED)
                 {
-                    if(pATResponse==AT_RX_OK)
+                    if(pATResponse->response==AT_RX_OK)
                     {
                         //parse received data
                         char *pch;
@@ -325,14 +325,16 @@ void ATParsingTaskCode(void const *argument)
                         {
                             memcpy(asciiChar, rcvDataPointer + i, 2);
                             number = (uint32_t)strtol(asciiChar, NULL, 16);
-                            sprintf(pLoRaPayload->Buf, "%s%c", pLoRaPayload->Buf, number);
+                            //sprintf(pLoRaPayload->Buf, "%s%c", pLoRaPayload->Buf, number);
+                            pLoRaPayload->Buf[i / 2] = number & 0x00FF;
                         }
                         pch = strtok(NULL, ":");
                         pLoRaPayload->rcvPort = atoi(pch);
                         pch = strtok(NULL, ":");
                         pLoRaPayload->rcvRSSI = atoi(pch);
                         pch = strtok(NULL, ":");
-                        pLoRaPayload->rcvSNR = atoi(pch);                        
+                        pLoRaPayload->rcvSNR = atoi(pch);
+                        pATResponse->rx_payload = pLoRaPayload;
                     }    
                     else
                     {
