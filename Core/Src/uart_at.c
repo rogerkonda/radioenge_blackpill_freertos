@@ -195,7 +195,8 @@ void ATHandlingTaskCode(void *argument)
             if (new_cmd->response == AT_RX_OK)
             {
                 LoRaWAN_RxEventCallback(new_cmd->rx_payload->Buf, new_cmd->rx_payload->rcvDataLen, new_cmd->rx_payload->rcvPort, new_cmd->rx_payload->rcvRSSI, new_cmd->rx_payload->rcvSNR);
-                osMemoryPoolFree(mpid_LoRaPayload_MemPool, PendingCommand->rx_payload);                
+                //osMemoryPoolFree(mpid_LoRaPayload_MemPool, PendingCommand->rx_payload);                
+                osMemoryPoolFree(mpid_LoRaPayload_MemPool, new_cmd->rx_payload);
                 osMemoryPoolFree(mpid_ATCMD_MemPool,new_cmd);                        
             }
             else if ((new_cmd->response == AT_JOINED) || (new_cmd->response == AT_JOIN_ERROR))
@@ -345,7 +346,7 @@ void ATParsingTaskCode(void const *argument)
                 }
                 else
                 {
-                    osMemoryPoolFree(mpid_ATCMD_MemPool,pATResponse);                    
+                    osMemoryPoolFree(mpid_ATCMD_MemPool,pATResponse);
                 }
             } 
             else
