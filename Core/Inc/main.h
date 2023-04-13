@@ -75,6 +75,7 @@ void Error_Handler(void);
 #define BRIDGE_2_EN_GPIO_Port GPIOB
 #define BRIDGE_3A_Pin GPIO_PIN_13
 #define BRIDGE_3A_GPIO_Port GPIOB
+
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
