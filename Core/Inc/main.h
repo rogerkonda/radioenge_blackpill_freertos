@@ -59,22 +59,34 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define KIT_LED_Pin GPIO_PIN_13
+#define KIT_LED_GPIO_Port GPIOC
+#define TEMP_SENSOR_Pin GPIO_PIN_0
+#define TEMP_SENSOR_GPIO_Port GPIOA
 #define LED3_GREEN_Pin GPIO_PIN_1
 #define LED3_GREEN_GPIO_Port GPIOA
 #define LED1_RED_Pin GPIO_PIN_2
 #define LED1_RED_GPIO_Port GPIOA
-#define LED4_WHITE_Pin GPIO_PIN_3
-#define LED4_WHITE_GPIO_Port GPIOA
+#define LED4_BLUE_Pin GPIO_PIN_3
+#define LED4_BLUE_GPIO_Port GPIOA
 #define LED2_YELLOW_Pin GPIO_PIN_4
 #define LED2_YELLOW_GPIO_Port GPIOA
-#define BRIDGE_1_EN_Pin GPIO_PIN_6
-#define BRIDGE_1_EN_GPIO_Port GPIOA
+#define BRIDGE_1_2_EN_Pin GPIO_PIN_6
+#define BRIDGE_1_2_EN_GPIO_Port GPIOA
+#define BRIDGE_2A_Pin GPIO_PIN_7
+#define BRIDGE_2A_GPIO_Port GPIOA
 #define BRIDGE_1A_Pin GPIO_PIN_2
 #define BRIDGE_1A_GPIO_Port GPIOB
-#define BRIDGE_2_EN_Pin GPIO_PIN_12
-#define BRIDGE_2_EN_GPIO_Port GPIOB
+#define BRIDGE_3_4_EN_Pin GPIO_PIN_12
+#define BRIDGE_3_4_EN_GPIO_Port GPIOB
 #define BRIDGE_3A_Pin GPIO_PIN_13
 #define BRIDGE_3A_GPIO_Port GPIOB
+#define BRIDGE_4A_Pin GPIO_PIN_8
+#define BRIDGE_4A_GPIO_Port GPIOA
+#define STM_TX_Pin GPIO_PIN_9
+#define STM_TX_GPIO_Port GPIOA
+#define STM_RX_Pin GPIO_PIN_10
+#define STM_RX_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 
