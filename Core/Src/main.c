@@ -23,7 +23,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+/* ------> COMENTÁRIO DE TESTE ROGER <------- */
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
