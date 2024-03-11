@@ -79,57 +79,7 @@ void SetRadioState(RADIO_STATE state)
 void ModemLedCallback(void *argument) 
 {
     //here we use gRadioState without semaphore because a preemption will only cause a momentary led glitch    
-    switch(gRadioState)
-    {
-    case RADIO_RESET:
-    {
-        HAL_GPIO_TogglePin(LED1_RED_GPIO_Port, LED1_RED_Pin);
-        HAL_GPIO_WritePin(LED2_YELLOW_GPIO_Port, LED2_YELLOW_Pin, 0);
-        HAL_GPIO_WritePin(LED3_GREEN_GPIO_Port, LED3_GREEN_Pin, 0);
-        HAL_GPIO_WritePin(LED4_BLUE_GPIO_Port, LED4_BLUE_Pin, 0); 
-        break;       
-    }
-    case RADIO_CONFIGURING:
-    {
-        HAL_GPIO_WritePin(LED1_RED_GPIO_Port, LED1_RED_Pin,0);
-        HAL_GPIO_TogglePin(LED2_YELLOW_GPIO_Port, LED2_YELLOW_Pin);
-        HAL_GPIO_WritePin(LED3_GREEN_GPIO_Port, LED3_GREEN_Pin,0);
-        HAL_GPIO_WritePin(LED4_BLUE_GPIO_Port, LED4_BLUE_Pin, 0);        
-        break;       
-    }
-    case RADIO_JOINING:
-    {
-        HAL_GPIO_WritePin(LED1_RED_GPIO_Port, LED1_RED_Pin,0);
-        HAL_GPIO_WritePin(LED2_YELLOW_GPIO_Port, LED2_YELLOW_Pin,0);
-        HAL_GPIO_TogglePin(LED3_GREEN_GPIO_Port, LED3_GREEN_Pin);
-        HAL_GPIO_WritePin(LED4_BLUE_GPIO_Port, LED4_BLUE_Pin, 0);        
-        break;       
-    }
-    case RADIO_READY:
-    {
-        HAL_GPIO_WritePin(LED1_RED_GPIO_Port, LED1_RED_Pin,0);
-        HAL_GPIO_WritePin(LED2_YELLOW_GPIO_Port, LED2_YELLOW_Pin,0);
-        HAL_GPIO_WritePin(LED3_GREEN_GPIO_Port, LED3_GREEN_Pin,1);
-        HAL_GPIO_WritePin(LED4_BLUE_GPIO_Port, LED4_BLUE_Pin, 0);        
-        break;       
-    }
-    case RADIO_DUTYCYCLED:
-    {
-        HAL_GPIO_WritePin(LED1_RED_GPIO_Port, LED1_RED_Pin,0);
-        HAL_GPIO_WritePin(LED2_YELLOW_GPIO_Port, LED2_YELLOW_Pin,0);
-        HAL_GPIO_WritePin(LED3_GREEN_GPIO_Port, LED3_GREEN_Pin,1);
-        HAL_GPIO_TogglePin(LED4_BLUE_GPIO_Port, LED4_BLUE_Pin);        
-        break;       
-    }
-    default:
-    {
-        HAL_GPIO_TogglePin(LED1_RED_GPIO_Port, LED1_RED_Pin);
-        HAL_GPIO_TogglePin(LED2_YELLOW_GPIO_Port, LED2_YELLOW_Pin);
-        HAL_GPIO_TogglePin(LED3_GREEN_GPIO_Port, LED3_GREEN_Pin);
-        HAL_GPIO_TogglePin(LED4_BLUE_GPIO_Port, LED4_BLUE_Pin);        
-        break;       
-    }    
-    }
+    
 }
 
 

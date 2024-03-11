@@ -128,6 +128,54 @@ const osThreadAttr_t AppSendTask_attributes = {
   .stack_size = sizeof(SendTemperatureBuffer),
   .priority = (osPriority_t) osPriorityLow7,
 };
+/* Definitions for BlueLedTask */
+osThreadId_t BlueLedTaskHandle;
+uint32_t BlueLedTaskBuffer[ 128 ];
+osStaticThreadDef_t BlueLedTaskControlBlock;
+const osThreadAttr_t BlueLedTask_attributes = {
+  .name = "BlueLedTask",
+  .cb_mem = &BlueLedTaskControlBlock,
+  .cb_size = sizeof(BlueLedTaskControlBlock),
+  .stack_mem = &BlueLedTaskBuffer[0],
+  .stack_size = sizeof(BlueLedTaskBuffer),
+  .priority = (osPriority_t) osPriorityNormal,
+};
+/* Definitions for RedLedTask */
+osThreadId_t RedLedTaskHandle;
+uint32_t RedLedTaskBuffer[ 128 ];
+osStaticThreadDef_t RedLedTaskControlBlock;
+const osThreadAttr_t RedLedTask_attributes = {
+  .name = "RedLedTask",
+  .cb_mem = &RedLedTaskControlBlock,
+  .cb_size = sizeof(RedLedTaskControlBlock),
+  .stack_mem = &RedLedTaskBuffer[0],
+  .stack_size = sizeof(RedLedTaskBuffer),
+  .priority = (osPriority_t) osPriorityLow1,
+};
+/* Definitions for YellowLedTask */
+osThreadId_t YellowLedTaskHandle;
+uint32_t YellowLedTaskBuffer[ 128 ];
+osStaticThreadDef_t YellowLedTaskControlBlock;
+const osThreadAttr_t YellowLedTask_attributes = {
+  .name = "YellowLedTask",
+  .cb_mem = &YellowLedTaskControlBlock,
+  .cb_size = sizeof(YellowLedTaskControlBlock),
+  .stack_mem = &YellowLedTaskBuffer[0],
+  .stack_size = sizeof(YellowLedTaskBuffer),
+  .priority = (osPriority_t) osPriorityAboveNormal5,
+};
+/* Definitions for GreenLedTask */
+osThreadId_t GreenLedTaskHandle;
+uint32_t GreenLedTaskBuffer[ 128 ];
+osStaticThreadDef_t GreenLedTaskControlBlock;
+const osThreadAttr_t GreenLedTask_attributes = {
+  .name = "GreenLedTask",
+  .cb_mem = &GreenLedTaskControlBlock,
+  .cb_size = sizeof(GreenLedTaskControlBlock),
+  .stack_mem = &GreenLedTaskBuffer[0],
+  .stack_size = sizeof(GreenLedTaskBuffer),
+  .priority = (osPriority_t) osPriorityNormal,
+};
 /* Definitions for uartQueue */
 osMessageQueueId_t uartQueueHandle;
 uint8_t uartQueueBuffer[ 4 * sizeof( void* ) ];
@@ -255,6 +303,10 @@ extern void ATHandlingTaskCode(void *argument);
 extern void UARTProcTaskCode(void *argument);
 extern void ModemManagerTaskCode(void *argument);
 extern void AppSendTaskCode(void *argument);
+extern void BlueLedTaskCode(void *argument);
+extern void RedLedTaskCode(void *argument);
+extern void YellowLedTaskCode(void *argument);
+extern void GreenLedTaskCode(void *argument);
 extern void PeriodicSendTimerCallback(void *argument);
 extern void ModemLedCallback(void *argument);
 extern void DutyCycleTimerCallback(void *argument);
@@ -335,19 +387,19 @@ int main(void)
 
   /* Create the semaphores(s) */
   /* creation of ATCommandSemaphore */
-  ATCommandSemaphoreHandle = osSemaphoreNew(1, 1, &ATCommandSemaphore_attributes);
+  ATCommandSemaphoreHandle = osSemaphoreNew(1, 0, &ATCommandSemaphore_attributes);
 
   /* creation of ATResponseSemaphore */
-  ATResponseSemaphoreHandle = osSemaphoreNew(1, 1, &ATResponseSemaphore_attributes);
+  ATResponseSemaphoreHandle = osSemaphoreNew(1, 0, &ATResponseSemaphore_attributes);
 
   /* creation of UARTTXSemaphore */
-  UARTTXSemaphoreHandle = osSemaphoreNew(1, 1, &UARTTXSemaphore_attributes);
+  UARTTXSemaphoreHandle = osSemaphoreNew(1, 0, &UARTTXSemaphore_attributes);
 
   /* creation of RadioStateSemaphore */
-  RadioStateSemaphoreHandle = osSemaphoreNew(1, 1, &RadioStateSemaphore_attributes);
+  RadioStateSemaphoreHandle = osSemaphoreNew(1, 0, &RadioStateSemaphore_attributes);
 
   /* creation of LoRaTXSemaphore */
-  LoRaTXSemaphoreHandle = osSemaphoreNew(1, 1, &LoRaTXSemaphore_attributes);
+  LoRaTXSemaphoreHandle = osSemaphoreNew(1, 0, &LoRaTXSemaphore_attributes);
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
@@ -400,6 +452,18 @@ int main(void)
   /* creation of AppSendTask */
   AppSendTaskHandle = osThreadNew(AppSendTaskCode, NULL, &AppSendTask_attributes);
 
+  /* creation of BlueLedTask */
+  BlueLedTaskHandle = osThreadNew(BlueLedTaskCode, NULL, &BlueLedTask_attributes);
+
+  /* creation of RedLedTask */
+  RedLedTaskHandle = osThreadNew(RedLedTaskCode, NULL, &RedLedTask_attributes);
+
+  /* creation of YellowLedTask */
+  YellowLedTaskHandle = osThreadNew(YellowLedTaskCode, NULL, &YellowLedTask_attributes);
+
+  /* creation of GreenLedTask */
+  GreenLedTaskHandle = osThreadNew(GreenLedTaskCode, NULL, &GreenLedTask_attributes);
+
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
@@ -414,6 +478,7 @@ int main(void)
 
   /* Start scheduler */
   osKernelStart();
+
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */

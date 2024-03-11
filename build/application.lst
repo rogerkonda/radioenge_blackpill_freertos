@@ -1,0 +1,430 @@
+ARM GAS  /tmp/ccGiWTws.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 6
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"application.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Core/Src/application.c"
+  20              		.section	.text.LoRaWAN_RxEventCallback,"ax",%progbits
+  21              		.align	1
+  22              		.global	LoRaWAN_RxEventCallback
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	LoRaWAN_RxEventCallback:
+  28              	.LFB220:
+   1:Core/Src/application.c **** #include "cmsis_os.h"
+   2:Core/Src/application.c **** #include "stm32f4xx_hal.h"
+   3:Core/Src/application.c **** #include "radioenge_modem.h"
+   4:Core/Src/application.c **** #include "main.h"
+   5:Core/Src/application.c **** extern osTimerId_t PeriodicSendTimerHandle;
+   6:Core/Src/application.c **** extern osThreadId_t AppSendTaskHandle;
+   7:Core/Src/application.c **** extern ADC_HandleTypeDef hadc1;
+   8:Core/Src/application.c **** extern osEventFlagsId_t ModemStatusFlagsHandle;
+   9:Core/Src/application.c **** extern TIM_HandleTypeDef htim3;
+  10:Core/Src/application.c **** 
+  11:Core/Src/application.c **** 
+  12:Core/Src/application.c **** void LoRaWAN_RxEventCallback(uint8_t *data, uint32_t length, uint32_t port, int32_t rssi, int32_t s
+  13:Core/Src/application.c **** {
+  29              		.loc 1 13 1
+  30              		.cfi_startproc
+  31              		@ args = 4, pretend = 0, frame = 16
+  32              		@ frame_needed = 1, uses_anonymous_args = 0
+  33              		@ link register save eliminated.
+  34 0000 80B4     		push	{r7}
+  35              	.LCFI0:
+  36              		.cfi_def_cfa_offset 4
+  37              		.cfi_offset 7, -4
+  38 0002 85B0     		sub	sp, sp, #20
+  39              	.LCFI1:
+  40              		.cfi_def_cfa_offset 24
+  41 0004 00AF     		add	r7, sp, #0
+  42              	.LCFI2:
+  43              		.cfi_def_cfa_register 7
+  44 0006 F860     		str	r0, [r7, #12]
+  45 0008 B960     		str	r1, [r7, #8]
+ARM GAS  /tmp/ccGiWTws.s 			page 2
+
+
+  46 000a 7A60     		str	r2, [r7, #4]
+  47 000c 3B60     		str	r3, [r7]
+  14:Core/Src/application.c **** 
+  15:Core/Src/application.c **** }
+  48              		.loc 1 15 1
+  49 000e 00BF     		nop
+  50 0010 1437     		adds	r7, r7, #20
+  51              	.LCFI3:
+  52              		.cfi_def_cfa_offset 4
+  53 0012 BD46     		mov	sp, r7
+  54              	.LCFI4:
+  55              		.cfi_def_cfa_register 13
+  56              		@ sp needed
+  57 0014 5DF8047B 		ldr	r7, [sp], #4
+  58              	.LCFI5:
+  59              		.cfi_restore 7
+  60              		.cfi_def_cfa_offset 0
+  61 0018 7047     		bx	lr
+  62              		.cfi_endproc
+  63              	.LFE220:
+  65              		.section	.text.PeriodicSendTimerCallback,"ax",%progbits
+  66              		.align	1
+  67              		.global	PeriodicSendTimerCallback
+  68              		.syntax unified
+  69              		.thumb
+  70              		.thumb_func
+  72              	PeriodicSendTimerCallback:
+  73              	.LFB221:
+  16:Core/Src/application.c **** 
+  17:Core/Src/application.c **** void PeriodicSendTimerCallback(void *argument)
+  18:Core/Src/application.c **** {
+  74              		.loc 1 18 1
+  75              		.cfi_startproc
+  76              		@ args = 0, pretend = 0, frame = 8
+  77              		@ frame_needed = 1, uses_anonymous_args = 0
+  78              		@ link register save eliminated.
+  79 0000 80B4     		push	{r7}
+  80              	.LCFI6:
+  81              		.cfi_def_cfa_offset 4
+  82              		.cfi_offset 7, -4
+  83 0002 83B0     		sub	sp, sp, #12
+  84              	.LCFI7:
+  85              		.cfi_def_cfa_offset 16
+  86 0004 00AF     		add	r7, sp, #0
+  87              	.LCFI8:
+  88              		.cfi_def_cfa_register 7
+  89 0006 7860     		str	r0, [r7, #4]
+  19:Core/Src/application.c **** }
+  90              		.loc 1 19 1
+  91 0008 00BF     		nop
+  92 000a 0C37     		adds	r7, r7, #12
+  93              	.LCFI9:
+  94              		.cfi_def_cfa_offset 4
+  95 000c BD46     		mov	sp, r7
+  96              	.LCFI10:
+  97              		.cfi_def_cfa_register 13
+  98              		@ sp needed
+ARM GAS  /tmp/ccGiWTws.s 			page 3
+
+
+  99 000e 5DF8047B 		ldr	r7, [sp], #4
+ 100              	.LCFI11:
+ 101              		.cfi_restore 7
+ 102              		.cfi_def_cfa_offset 0
+ 103 0012 7047     		bx	lr
+ 104              		.cfi_endproc
+ 105              	.LFE221:
+ 107              		.section	.text.AppSendTaskCode,"ax",%progbits
+ 108              		.align	1
+ 109              		.global	AppSendTaskCode
+ 110              		.syntax unified
+ 111              		.thumb
+ 112              		.thumb_func
+ 114              	AppSendTaskCode:
+ 115              	.LFB222:
+  20:Core/Src/application.c **** 
+  21:Core/Src/application.c **** void AppSendTaskCode(void *argument)
+  22:Core/Src/application.c **** {
+ 116              		.loc 1 22 1
+ 117              		.cfi_startproc
+ 118              		@ args = 0, pretend = 0, frame = 8
+ 119              		@ frame_needed = 1, uses_anonymous_args = 0
+ 120 0000 80B5     		push	{r7, lr}
+ 121              	.LCFI12:
+ 122              		.cfi_def_cfa_offset 8
+ 123              		.cfi_offset 7, -8
+ 124              		.cfi_offset 14, -4
+ 125 0002 82B0     		sub	sp, sp, #8
+ 126              	.LCFI13:
+ 127              		.cfi_def_cfa_offset 16
+ 128 0004 00AF     		add	r7, sp, #0
+ 129              	.LCFI14:
+ 130              		.cfi_def_cfa_register 7
+ 131 0006 7860     		str	r0, [r7, #4]
+ 132              	.L4:
+  23:Core/Src/application.c ****     /* USER CODE BEGIN 5 */
+  24:Core/Src/application.c ****     /* Infinite loop */    
+  25:Core/Src/application.c ****     
+  26:Core/Src/application.c **** 
+  27:Core/Src/application.c ****     while (1)
+  28:Core/Src/application.c ****     {        
+  29:Core/Src/application.c ****         LoRaWaitDutyCycle();       
+ 133              		.loc 1 29 9 discriminator 1
+ 134 0008 FFF7FEFF 		bl	LoRaWaitDutyCycle
+  30:Core/Src/application.c ****         //write code to read from sensors and send via LoRaWAN
+  31:Core/Src/application.c **** 
+  32:Core/Src/application.c ****         osDelay(30000);
+ 135              		.loc 1 32 9 discriminator 1
+ 136 000c 47F23050 		movw	r0, #30000
+ 137 0010 FFF7FEFF 		bl	osDelay
+  29:Core/Src/application.c ****         //write code to read from sensors and send via LoRaWAN
+ 138              		.loc 1 29 9 discriminator 1
+ 139 0014 00BF     		nop
+ 140 0016 F7E7     		b	.L4
+ 141              		.cfi_endproc
+ 142              	.LFE222:
+ 144              		.section	.text.BlueLedTaskCode,"ax",%progbits
+ARM GAS  /tmp/ccGiWTws.s 			page 4
+
+
+ 145              		.align	1
+ 146              		.global	BlueLedTaskCode
+ 147              		.syntax unified
+ 148              		.thumb
+ 149              		.thumb_func
+ 151              	BlueLedTaskCode:
+ 152              	.LFB223:
+  33:Core/Src/application.c ****     }
+  34:Core/Src/application.c **** }
+  35:Core/Src/application.c **** void BlueLedTaskCode(void *argument)
+  36:Core/Src/application.c **** {
+ 153              		.loc 1 36 1
+ 154              		.cfi_startproc
+ 155              		@ args = 0, pretend = 0, frame = 8
+ 156              		@ frame_needed = 1, uses_anonymous_args = 0
+ 157 0000 80B5     		push	{r7, lr}
+ 158              	.LCFI15:
+ 159              		.cfi_def_cfa_offset 8
+ 160              		.cfi_offset 7, -8
+ 161              		.cfi_offset 14, -4
+ 162 0002 82B0     		sub	sp, sp, #8
+ 163              	.LCFI16:
+ 164              		.cfi_def_cfa_offset 16
+ 165 0004 00AF     		add	r7, sp, #0
+ 166              	.LCFI17:
+ 167              		.cfi_def_cfa_register 7
+ 168 0006 7860     		str	r0, [r7, #4]
+ 169              	.L6:
+  37:Core/Src/application.c ****     while(1)
+  38:Core/Src/application.c ****     {
+  39:Core/Src/application.c ****         HAL_GPIO_TogglePin(LED4_BLUE_GPIO_Port, LED4_BLUE_Pin);
+ 170              		.loc 1 39 9 discriminator 1
+ 171 0008 0821     		movs	r1, #8
+ 172 000a 0448     		ldr	r0, .L7
+ 173 000c FFF7FEFF 		bl	HAL_GPIO_TogglePin
+  40:Core/Src/application.c ****         osDelay(50);
+ 174              		.loc 1 40 9 discriminator 1
+ 175 0010 3220     		movs	r0, #50
+ 176 0012 FFF7FEFF 		bl	osDelay
+  39:Core/Src/application.c ****         osDelay(50);
+ 177              		.loc 1 39 9 discriminator 1
+ 178 0016 00BF     		nop
+ 179 0018 F6E7     		b	.L6
+ 180              	.L8:
+ 181 001a 00BF     		.align	2
+ 182              	.L7:
+ 183 001c 00000240 		.word	1073872896
+ 184              		.cfi_endproc
+ 185              	.LFE223:
+ 187              		.section	.text.RedLedTaskCode,"ax",%progbits
+ 188              		.align	1
+ 189              		.global	RedLedTaskCode
+ 190              		.syntax unified
+ 191              		.thumb
+ 192              		.thumb_func
+ 194              	RedLedTaskCode:
+ 195              	.LFB224:
+ARM GAS  /tmp/ccGiWTws.s 			page 5
+
+
+  41:Core/Src/application.c **** 
+  42:Core/Src/application.c ****     }
+  43:Core/Src/application.c **** }
+  44:Core/Src/application.c **** void RedLedTaskCode(void *argument)
+  45:Core/Src/application.c **** {
+ 196              		.loc 1 45 1
+ 197              		.cfi_startproc
+ 198              		@ args = 0, pretend = 0, frame = 8
+ 199              		@ frame_needed = 1, uses_anonymous_args = 0
+ 200 0000 80B5     		push	{r7, lr}
+ 201              	.LCFI18:
+ 202              		.cfi_def_cfa_offset 8
+ 203              		.cfi_offset 7, -8
+ 204              		.cfi_offset 14, -4
+ 205 0002 82B0     		sub	sp, sp, #8
+ 206              	.LCFI19:
+ 207              		.cfi_def_cfa_offset 16
+ 208 0004 00AF     		add	r7, sp, #0
+ 209              	.LCFI20:
+ 210              		.cfi_def_cfa_register 7
+ 211 0006 7860     		str	r0, [r7, #4]
+ 212              	.L10:
+  46:Core/Src/application.c ****     while(1)
+  47:Core/Src/application.c ****     {
+  48:Core/Src/application.c ****         HAL_GPIO_TogglePin(LED1_RED_GPIO_Port, LED1_RED_Pin);
+ 213              		.loc 1 48 9 discriminator 1
+ 214 0008 0421     		movs	r1, #4
+ 215 000a 0448     		ldr	r0, .L11
+ 216 000c FFF7FEFF 		bl	HAL_GPIO_TogglePin
+  49:Core/Src/application.c ****         osDelay(500);
+ 217              		.loc 1 49 9 discriminator 1
+ 218 0010 4FF4FA70 		mov	r0, #500
+ 219 0014 FFF7FEFF 		bl	osDelay
+  48:Core/Src/application.c ****         osDelay(500);
+ 220              		.loc 1 48 9 discriminator 1
+ 221 0018 00BF     		nop
+ 222 001a F5E7     		b	.L10
+ 223              	.L12:
+ 224              		.align	2
+ 225              	.L11:
+ 226 001c 00000240 		.word	1073872896
+ 227              		.cfi_endproc
+ 228              	.LFE224:
+ 230              		.section	.text.YellowLedTaskCode,"ax",%progbits
+ 231              		.align	1
+ 232              		.global	YellowLedTaskCode
+ 233              		.syntax unified
+ 234              		.thumb
+ 235              		.thumb_func
+ 237              	YellowLedTaskCode:
+ 238              	.LFB225:
+  50:Core/Src/application.c **** 
+  51:Core/Src/application.c ****     }
+  52:Core/Src/application.c **** }
+  53:Core/Src/application.c **** void YellowLedTaskCode(void *argument)
+  54:Core/Src/application.c **** {
+ 239              		.loc 1 54 1
+ARM GAS  /tmp/ccGiWTws.s 			page 6
+
+
+ 240              		.cfi_startproc
+ 241              		@ args = 0, pretend = 0, frame = 8
+ 242              		@ frame_needed = 1, uses_anonymous_args = 0
+ 243 0000 80B5     		push	{r7, lr}
+ 244              	.LCFI21:
+ 245              		.cfi_def_cfa_offset 8
+ 246              		.cfi_offset 7, -8
+ 247              		.cfi_offset 14, -4
+ 248 0002 82B0     		sub	sp, sp, #8
+ 249              	.LCFI22:
+ 250              		.cfi_def_cfa_offset 16
+ 251 0004 00AF     		add	r7, sp, #0
+ 252              	.LCFI23:
+ 253              		.cfi_def_cfa_register 7
+ 254 0006 7860     		str	r0, [r7, #4]
+ 255              	.L14:
+  55:Core/Src/application.c ****     while(1)
+  56:Core/Src/application.c ****     {
+  57:Core/Src/application.c ****         HAL_GPIO_TogglePin(LED2_YELLOW_GPIO_Port, LED2_YELLOW_Pin);
+ 256              		.loc 1 57 9 discriminator 1
+ 257 0008 1021     		movs	r1, #16
+ 258 000a 0448     		ldr	r0, .L15
+ 259 000c FFF7FEFF 		bl	HAL_GPIO_TogglePin
+  58:Core/Src/application.c ****         osDelay(800);
+ 260              		.loc 1 58 9 discriminator 1
+ 261 0010 4FF44870 		mov	r0, #800
+ 262 0014 FFF7FEFF 		bl	osDelay
+  57:Core/Src/application.c ****         osDelay(800);
+ 263              		.loc 1 57 9 discriminator 1
+ 264 0018 00BF     		nop
+ 265 001a F5E7     		b	.L14
+ 266              	.L16:
+ 267              		.align	2
+ 268              	.L15:
+ 269 001c 00000240 		.word	1073872896
+ 270              		.cfi_endproc
+ 271              	.LFE225:
+ 273              		.section	.text.GreenLedTaskCode,"ax",%progbits
+ 274              		.align	1
+ 275              		.global	GreenLedTaskCode
+ 276              		.syntax unified
+ 277              		.thumb
+ 278              		.thumb_func
+ 280              	GreenLedTaskCode:
+ 281              	.LFB226:
+  59:Core/Src/application.c **** 
+  60:Core/Src/application.c ****     }
+  61:Core/Src/application.c **** }
+  62:Core/Src/application.c **** void GreenLedTaskCode(void *argument)
+  63:Core/Src/application.c **** {
+ 282              		.loc 1 63 1
+ 283              		.cfi_startproc
+ 284              		@ args = 0, pretend = 0, frame = 8
+ 285              		@ frame_needed = 1, uses_anonymous_args = 0
+ 286 0000 80B5     		push	{r7, lr}
+ 287              	.LCFI24:
+ 288              		.cfi_def_cfa_offset 8
+ARM GAS  /tmp/ccGiWTws.s 			page 7
+
+
+ 289              		.cfi_offset 7, -8
+ 290              		.cfi_offset 14, -4
+ 291 0002 82B0     		sub	sp, sp, #8
+ 292              	.LCFI25:
+ 293              		.cfi_def_cfa_offset 16
+ 294 0004 00AF     		add	r7, sp, #0
+ 295              	.LCFI26:
+ 296              		.cfi_def_cfa_register 7
+ 297 0006 7860     		str	r0, [r7, #4]
+ 298              	.L18:
+  64:Core/Src/application.c ****     while(1)
+  65:Core/Src/application.c ****     {
+  66:Core/Src/application.c ****         HAL_GPIO_TogglePin(LED3_GREEN_GPIO_Port, LED3_GREEN_Pin);
+ 299              		.loc 1 66 9 discriminator 1
+ 300 0008 0221     		movs	r1, #2
+ 301 000a 0448     		ldr	r0, .L19
+ 302 000c FFF7FEFF 		bl	HAL_GPIO_TogglePin
+  67:Core/Src/application.c ****         osDelay(250);
+ 303              		.loc 1 67 9 discriminator 1
+ 304 0010 FA20     		movs	r0, #250
+ 305 0012 FFF7FEFF 		bl	osDelay
+  66:Core/Src/application.c ****         osDelay(250);
+ 306              		.loc 1 66 9 discriminator 1
+ 307 0016 00BF     		nop
+ 308 0018 F6E7     		b	.L18
+ 309              	.L20:
+ 310 001a 00BF     		.align	2
+ 311              	.L19:
+ 312 001c 00000240 		.word	1073872896
+ 313              		.cfi_endproc
+ 314              	.LFE226:
+ 316              		.text
+ 317              	.Letext0:
+ 318              		.file 2 "/opt/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi/arm-none-eabi/include/machine/_defa
+ 319              		.file 3 "/opt/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi/arm-none-eabi/include/sys/_stdint.h
+ 320              		.file 4 "Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h"
+ 321              		.file 5 "Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f411xe.h"
+ 322              		.file 6 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_gpio.h"
+ 323              		.file 7 "Core/Inc/radioenge_modem.h"
+ARM GAS  /tmp/ccGiWTws.s 			page 8
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 application.c
+     /tmp/ccGiWTws.s:21     .text.LoRaWAN_RxEventCallback:0000000000000000 $t
+     /tmp/ccGiWTws.s:27     .text.LoRaWAN_RxEventCallback:0000000000000000 LoRaWAN_RxEventCallback
+     /tmp/ccGiWTws.s:66     .text.PeriodicSendTimerCallback:0000000000000000 $t
+     /tmp/ccGiWTws.s:72     .text.PeriodicSendTimerCallback:0000000000000000 PeriodicSendTimerCallback
+     /tmp/ccGiWTws.s:108    .text.AppSendTaskCode:0000000000000000 $t
+     /tmp/ccGiWTws.s:114    .text.AppSendTaskCode:0000000000000000 AppSendTaskCode
+     /tmp/ccGiWTws.s:145    .text.BlueLedTaskCode:0000000000000000 $t
+     /tmp/ccGiWTws.s:151    .text.BlueLedTaskCode:0000000000000000 BlueLedTaskCode
+     /tmp/ccGiWTws.s:183    .text.BlueLedTaskCode:000000000000001c $d
+     /tmp/ccGiWTws.s:188    .text.RedLedTaskCode:0000000000000000 $t
+     /tmp/ccGiWTws.s:194    .text.RedLedTaskCode:0000000000000000 RedLedTaskCode
+     /tmp/ccGiWTws.s:226    .text.RedLedTaskCode:000000000000001c $d
+     /tmp/ccGiWTws.s:231    .text.YellowLedTaskCode:0000000000000000 $t
+     /tmp/ccGiWTws.s:237    .text.YellowLedTaskCode:0000000000000000 YellowLedTaskCode
+     /tmp/ccGiWTws.s:269    .text.YellowLedTaskCode:000000000000001c $d
+     /tmp/ccGiWTws.s:274    .text.GreenLedTaskCode:0000000000000000 $t
+     /tmp/ccGiWTws.s:280    .text.GreenLedTaskCode:0000000000000000 GreenLedTaskCode
+     /tmp/ccGiWTws.s:312    .text.GreenLedTaskCode:000000000000001c $d
+
+UNDEFINED SYMBOLS
+LoRaWaitDutyCycle
+osDelay
+HAL_GPIO_TogglePin

@@ -1,0 +1,187 @@
+ARM GAS  /tmp/ccZymw8c.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 6
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"freertos.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Core/Src/freertos.c"
+  20              		.section	.text.PreSleepProcessing,"ax",%progbits
+  21              		.align	1
+  22              		.weak	PreSleepProcessing
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	PreSleepProcessing:
+  28              	.LFB220:
+   1:Core/Src/freertos.c **** /* USER CODE BEGIN Header */
+   2:Core/Src/freertos.c **** /**
+   3:Core/Src/freertos.c ****   ******************************************************************************
+   4:Core/Src/freertos.c ****   * File Name          : freertos.c
+   5:Core/Src/freertos.c ****   * Description        : Code for freertos applications
+   6:Core/Src/freertos.c ****   ******************************************************************************
+   7:Core/Src/freertos.c ****   * @attention
+   8:Core/Src/freertos.c ****   *
+   9:Core/Src/freertos.c ****   * Copyright (c) 2022 STMicroelectronics.
+  10:Core/Src/freertos.c ****   * All rights reserved.
+  11:Core/Src/freertos.c ****   *
+  12:Core/Src/freertos.c ****   * This software is licensed under terms that can be found in the LICENSE file
+  13:Core/Src/freertos.c ****   * in the root directory of this software component.
+  14:Core/Src/freertos.c ****   * If no LICENSE file comes with this software, it is provided AS-IS.
+  15:Core/Src/freertos.c ****   *
+  16:Core/Src/freertos.c ****   ******************************************************************************
+  17:Core/Src/freertos.c ****   */
+  18:Core/Src/freertos.c **** /* USER CODE END Header */
+  19:Core/Src/freertos.c **** 
+  20:Core/Src/freertos.c **** /* Includes ------------------------------------------------------------------*/
+  21:Core/Src/freertos.c **** #include "FreeRTOS.h"
+  22:Core/Src/freertos.c **** #include "task.h"
+  23:Core/Src/freertos.c **** #include "main.h"
+  24:Core/Src/freertos.c **** 
+  25:Core/Src/freertos.c **** /* Private includes ----------------------------------------------------------*/
+  26:Core/Src/freertos.c **** /* USER CODE BEGIN Includes */
+  27:Core/Src/freertos.c **** 
+  28:Core/Src/freertos.c **** /* USER CODE END Includes */
+  29:Core/Src/freertos.c **** 
+  30:Core/Src/freertos.c **** /* Private typedef -----------------------------------------------------------*/
+ARM GAS  /tmp/ccZymw8c.s 			page 2
+
+
+  31:Core/Src/freertos.c **** /* USER CODE BEGIN PTD */
+  32:Core/Src/freertos.c **** 
+  33:Core/Src/freertos.c **** /* USER CODE END PTD */
+  34:Core/Src/freertos.c **** 
+  35:Core/Src/freertos.c **** /* Private define ------------------------------------------------------------*/
+  36:Core/Src/freertos.c **** /* USER CODE BEGIN PD */
+  37:Core/Src/freertos.c **** 
+  38:Core/Src/freertos.c **** /* USER CODE END PD */
+  39:Core/Src/freertos.c **** 
+  40:Core/Src/freertos.c **** /* Private macro -------------------------------------------------------------*/
+  41:Core/Src/freertos.c **** /* USER CODE BEGIN PM */
+  42:Core/Src/freertos.c **** 
+  43:Core/Src/freertos.c **** /* USER CODE END PM */
+  44:Core/Src/freertos.c **** 
+  45:Core/Src/freertos.c **** /* Private variables ---------------------------------------------------------*/
+  46:Core/Src/freertos.c **** /* USER CODE BEGIN Variables */
+  47:Core/Src/freertos.c **** 
+  48:Core/Src/freertos.c **** /* USER CODE END Variables */
+  49:Core/Src/freertos.c **** 
+  50:Core/Src/freertos.c **** /* Private function prototypes -----------------------------------------------*/
+  51:Core/Src/freertos.c **** /* USER CODE BEGIN FunctionPrototypes */
+  52:Core/Src/freertos.c **** 
+  53:Core/Src/freertos.c **** /* USER CODE END FunctionPrototypes */
+  54:Core/Src/freertos.c **** 
+  55:Core/Src/freertos.c **** /* USER CODE BEGIN PREPOSTSLEEP */
+  56:Core/Src/freertos.c **** __weak void PreSleepProcessing(uint32_t ulExpectedIdleTime)
+  57:Core/Src/freertos.c **** {
+  29              		.loc 1 57 1
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 8
+  32              		@ frame_needed = 1, uses_anonymous_args = 0
+  33              		@ link register save eliminated.
+  34 0000 80B4     		push	{r7}
+  35              	.LCFI0:
+  36              		.cfi_def_cfa_offset 4
+  37              		.cfi_offset 7, -4
+  38 0002 83B0     		sub	sp, sp, #12
+  39              	.LCFI1:
+  40              		.cfi_def_cfa_offset 16
+  41 0004 00AF     		add	r7, sp, #0
+  42              	.LCFI2:
+  43              		.cfi_def_cfa_register 7
+  44 0006 7860     		str	r0, [r7, #4]
+  58:Core/Src/freertos.c **** /* place for user code */
+  59:Core/Src/freertos.c **** }
+  45              		.loc 1 59 1
+  46 0008 00BF     		nop
+  47 000a 0C37     		adds	r7, r7, #12
+  48              	.LCFI3:
+  49              		.cfi_def_cfa_offset 4
+  50 000c BD46     		mov	sp, r7
+  51              	.LCFI4:
+  52              		.cfi_def_cfa_register 13
+  53              		@ sp needed
+  54 000e 5DF8047B 		ldr	r7, [sp], #4
+  55              	.LCFI5:
+  56              		.cfi_restore 7
+ARM GAS  /tmp/ccZymw8c.s 			page 3
+
+
+  57              		.cfi_def_cfa_offset 0
+  58 0012 7047     		bx	lr
+  59              		.cfi_endproc
+  60              	.LFE220:
+  62              		.section	.text.PostSleepProcessing,"ax",%progbits
+  63              		.align	1
+  64              		.weak	PostSleepProcessing
+  65              		.syntax unified
+  66              		.thumb
+  67              		.thumb_func
+  69              	PostSleepProcessing:
+  70              	.LFB221:
+  60:Core/Src/freertos.c **** 
+  61:Core/Src/freertos.c **** __weak void PostSleepProcessing(uint32_t ulExpectedIdleTime)
+  62:Core/Src/freertos.c **** {
+  71              		.loc 1 62 1
+  72              		.cfi_startproc
+  73              		@ args = 0, pretend = 0, frame = 8
+  74              		@ frame_needed = 1, uses_anonymous_args = 0
+  75              		@ link register save eliminated.
+  76 0000 80B4     		push	{r7}
+  77              	.LCFI6:
+  78              		.cfi_def_cfa_offset 4
+  79              		.cfi_offset 7, -4
+  80 0002 83B0     		sub	sp, sp, #12
+  81              	.LCFI7:
+  82              		.cfi_def_cfa_offset 16
+  83 0004 00AF     		add	r7, sp, #0
+  84              	.LCFI8:
+  85              		.cfi_def_cfa_register 7
+  86 0006 7860     		str	r0, [r7, #4]
+  63:Core/Src/freertos.c **** /* place for user code */
+  64:Core/Src/freertos.c **** }
+  87              		.loc 1 64 1
+  88 0008 00BF     		nop
+  89 000a 0C37     		adds	r7, r7, #12
+  90              	.LCFI9:
+  91              		.cfi_def_cfa_offset 4
+  92 000c BD46     		mov	sp, r7
+  93              	.LCFI10:
+  94              		.cfi_def_cfa_register 13
+  95              		@ sp needed
+  96 000e 5DF8047B 		ldr	r7, [sp], #4
+  97              	.LCFI11:
+  98              		.cfi_restore 7
+  99              		.cfi_def_cfa_offset 0
+ 100 0012 7047     		bx	lr
+ 101              		.cfi_endproc
+ 102              	.LFE221:
+ 104              		.text
+ 105              	.Letext0:
+ 106              		.file 2 "/opt/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi/arm-none-eabi/include/machine/_defa
+ 107              		.file 3 "/opt/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi/arm-none-eabi/include/sys/_stdint.h
+ARM GAS  /tmp/ccZymw8c.s 			page 4
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 freertos.c
+     /tmp/ccZymw8c.s:21     .text.PreSleepProcessing:0000000000000000 $t
+     /tmp/ccZymw8c.s:27     .text.PreSleepProcessing:0000000000000000 PreSleepProcessing
+     /tmp/ccZymw8c.s:63     .text.PostSleepProcessing:0000000000000000 $t
+     /tmp/ccZymw8c.s:69     .text.PostSleepProcessing:0000000000000000 PostSleepProcessing
+
+NO UNDEFINED SYMBOLS
