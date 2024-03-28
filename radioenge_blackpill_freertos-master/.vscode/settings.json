@@ -1,0 +1,13 @@
+{
+    "cortex-debug.variableUseNaturalFormat": true,
+    "files.associations": {
+        "typeinfo": "c",
+        "uart_at.h": "c",
+        "array": "c",
+        "string": "c",
+        "string_view": "c",
+        "uartringbufdma.h": "c",
+        "semphr.h": "c",
+        "main.h": "c"
+    }
+}
